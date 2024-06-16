@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presidential Debate Simulator</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Instructions</h2>
+        <ul>
+            <li>Enter a question in the text box and click "Ask" to get responses from the candidates.</li>
+            <li>Read the responses from Candidate A and Candidate B.</li>
+            <li>Vote for the response you like best by clicking the "Vote" button under the candidate's response.</li>
+            <li>Click "End Debate" to see the results, including which candidate received more votes and a summary of the questions and chosen responses.</li>
+            <li>Try to ask an odd number of questions to prevent a tie.</li>
+        </ul>
+        <h2>Debate Topic Ideas</h2>
+        <ul id="exampleQuestionsList"></ul>
+    </div>
+    <div class="main-content">
+        <h1>Presidential Debate Simulator</h1>
+        <div class="badges-container">
+            <h2>Earned Badges</h2>
+            <ul id="earnedBadgesList"></ul>
+        </div>
+        <div class="debate">
+            <div class="candidate" id="candidateA">
+                <h2>Candidate A</h2>
+                <div class="response" id="responseA">Awaiting response...</div>
+                <button class="vote-button" onclick="vote('A')">Vote for Candidate A</button>
+            </div>
+            <div class="candidate" id="candidateB">
+                <h2>Candidate B</h2>
+                <div class="response" id="responseB">Awaiting response...</div>
+                <button class="vote-button" onclick="vote('B')">Vote for Candidate B</button>
+            </div>
+        </div>
+        <div class="notice">
+            Notice: Only one eligible debate per day. The server resets at 1:00 PM daily.
+        </div>
+        <div class="controls">
+            <input type="text" id="questionInput" placeholder="Enter your question...">
+            <button onclick="askQuestion()">Ask</button>
+            <button onclick="endDebate()">End Debate</button>
+        </div>
+        <div id="results" style="display: none;">
+            <h2>Debate Results</h2>
+            <p id="winner"></p>
+            <ul id="questionList"></ul>
+        </div>
+    
+        <!-- Knowledge Bar -->
+        <div class="knowledge-bar">
+            <h2>Test Your Knowledge</h2>
+        </div>
+        <!-- Trivia Section -->
+        <div class="trivia-section">
+            <div class="trivia-content">
+                <div id="triviaQuestion">L</div>
+                <div class="trivia-buttons">
+                    <button onclick="submitAnswer('trump')">Donald Trump</button>
+                    <button onclick="submitAnswer('biden')">Joe Biden</button>
+                </div>
+                <p id="triviaFeedback"></p>
+                <div>
+                    <p>Correct Answers: <span id="correctAnswers">0</span></p>
+                    <p>Incorrect Answers: <span id="incorrectAnswers">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.877.0.min.js"></script>
+    <script src="script.js" defer></script>
+</body>
+</html>
