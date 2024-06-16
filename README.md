@@ -26,4 +26,6 @@ To run this project locally:
    git clone https://github.com/yourusername/presidential-debate-simulator.git
 2. Navigate to directory:
    cd presidential-debate-simulator
-3. Open index.html in your web browser. (Best using Chrome)
+3. Open script.js and paste the following apiKey into line 19 and click save
+   'sk-proj-6fKzMEDb1eqluqbulKMwT3BlbkFJaGYfTfJhbcKobhrWLBuk'
+4. Open index.html in your web browser. (Best using Chrome)
