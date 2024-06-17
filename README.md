@@ -19,7 +19,7 @@ The Presidential Debate Simulator is an interactive web application designed to 
 
 ## Decrypting the API Key
 
-To decrypt the API key, follow these steps:
+To decrypt the API key on Windows, follow these steps:
 
 1. Ensure you have OpenSSL installed on your system. If not, download and install it from [OpenSSL for Windows](https://slproweb.com/products/Win32OpenSSL.html).
 
@@ -30,6 +30,33 @@ To decrypt the API key, follow these steps:
 4. Run the following command to decrypt the API key:
    ```sh
    openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2
+
+For Unix (Linux/Mac):
+1. Ensure you have OpenSSL installed on your system. You can install it using your package manager if it's not already installed.
+
+For Linux:
+
+sudo apt-get install openssl  # Debian/Ubuntu
+sudo yum install openssl      # CentOS/RHEL
+sudo pacman -S openssl        # Arch Linux
+
+For Mac:
+
+brew install openssl
+
+2. Download the api_key.enc file from this repository.
+
+3. Move the api_key.enc file to your desired directory (e.g., your home directory).
+
+4. Open a terminal and navigate to the directory containing api_key.enc. For example:
+
+cd ~/Desktop
+
+5. Run the following command to decrypt the API key:
+
+openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2
+
+6. This will create a file named api_key.txt in the same directory containing the decrypted API key.
 
 
 ## Getting Started
