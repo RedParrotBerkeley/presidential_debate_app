@@ -72,6 +72,10 @@ To run this project locally:
    
 4. Open index.html in your web browser. (Best using Chrome)
 
+## Data Analysis and Visualizations
+* View data visualizations created from mock_response_data.csv by running voting_viz.ipynb 
+* Categorize raw questions into broader topics using categorize.py. This takes in questions from uncategorizedQuestions.csv and puts them through ChatGPT to classify them into categories and outputs these in a new csv. You will need to create an api key and adjust the code for this to work for you.
+
 ## License
 
 This project is licensed under the Testing Purposes License - see the [LICENSE] file for details.
