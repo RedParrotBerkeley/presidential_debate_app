@@ -34,7 +34,7 @@ async function initializeTrivia() {
 }
 
 async function generateTriviaQuestion() {
-    const apiKey = 'sk-proj-PhHFx7jYed8h4763Vbm9T3BlbkFJIHQ3ZEZlB9NoU9vShu2B';
+    const apiKey = 'ENTER API KEY HERE';
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
     const prompt = "Generate a trivia question and answer about US Presidents, make these unique and/or fun questions, do not repeat questions in one hour. Provide the question in the format 'Question: ...' and the answer in the format 'Answer: ...' with the answer being 'trump' or 'biden'.";
@@ -318,7 +318,7 @@ async function askQuestion() {
 }
 
 async function fetchResponse(question, candidate) {
-    const apiKey = 'sk-proj-PhHFx7jYed8h4763Vbm9T3BlbkFJIHQ3ZEZlB9NoU9vShu2B';
+    const apiKey = 'ENTER API KEY HERE';
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
     const prompt = candidate === 'trump'
