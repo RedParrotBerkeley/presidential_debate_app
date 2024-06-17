@@ -17,6 +17,21 @@ The Presidential Debate Simulator is an interactive web application designed to 
 4. **End Debate**: Click "End Debate" to see the results.
 5. **Test Your Knowledge**: Answer trivia questions by selecting the correct candidate.
 
+## Decrypting the API Key
+
+To decrypt the API key, follow these steps:
+
+1. Ensure you have OpenSSL installed on your system. If not, download and install it from [OpenSSL for Windows](https://slproweb.com/products/Win32OpenSSL.html).
+
+2. Download the `api_key.enc` file from this repository.
+
+3. Open a terminal (Command Prompt, PowerShell, etc.) and navigate to the directory containing `api_key.enc`.
+
+4. Run the following command to decrypt the API key:
+   ```sh
+   openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2
+
+
 ## Getting Started
 
 To run this project locally:
@@ -26,6 +41,6 @@ To run this project locally:
    git clone https://github.com/yourusername/presidential-debate-simulator.git
 2. Navigate to directory:
    cd presidential-debate-simulator
-3. Open script.js and paste the following apiKey into line 19 and click save
-   'sk-proj-6fKzMEDb1eqluqbulKMwT3BlbkFJaGYfTfJhbcKobhrWLBuk'
+3. Open script.js and paste the decrypted apiKey into line 39 and 321 and click save
+   
 4. Open index.html in your web browser. (Best using Chrome)
