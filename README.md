@@ -71,3 +71,8 @@ To run this project locally:
 3. Open script.js and paste the decrypted apiKey into line 39 and 321 and click save
    
 4. Open index.html in your web browser. (Best using Chrome)
+
+## License
+
+This project is licensed under the Testing Purposes License - see the [LICENSE] file for details.
+
