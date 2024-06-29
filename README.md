@@ -18,46 +18,46 @@ The Presidential Debate Simulator is an interactive web application designed to 
 4. **End Debate**: Click "End Debate" to see the results.
 5. **Test Your Knowledge**: Answer trivia questions by selecting the correct candidate.
 
-## Decrypting the API Key
+~~## Decrypting the API Key~~ NO LONGER SUPPORTED
 
-To decrypt the API key on Windows, follow these steps:
+~~To decrypt the API key on Windows, follow these steps:~~
 
-1. Ensure you have OpenSSL installed on your system. If not, download and install it from [OpenSSL for Windows](https://slproweb.com/products/Win32OpenSSL.html).
+~~1. Ensure you have OpenSSL installed on your system. If not, download and install it from [OpenSSL for Windows](https://slproweb.com/products/Win32OpenSSL.html).~~
 
-2. Download the `api_key.enc` file from this repository.
+~~2. Download the `api_key.enc` file from this repository.~~
 
-3. Open a terminal (Command Prompt, PowerShell, etc.) and navigate to the directory containing `api_key.enc`.
+~~3. Open a terminal (Command Prompt, PowerShell, etc.) and navigate to the directory containing `api_key.enc`.~~
 
-4. Run the following command to decrypt the API key:
-   ```sh
-   openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2
+~~4. Run the following command to decrypt the API key:~~
+~~```sh~~
+   ~~openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2~~
 
-For Unix (Linux/Mac):
-1. Ensure you have OpenSSL installed on your system. You can install it using your package manager if it's not already installed.
+~~For Unix (Linux/Mac):~~
+~~1. Ensure you have OpenSSL installed on your system. You can install it using your package manager if it's not already installed.~~
 
-For Linux:
+~~For Linux:~~
 
-sudo apt-get install openssl  # Debian/Ubuntu
-sudo yum install openssl      # CentOS/RHEL
-sudo pacman -S openssl        # Arch Linux
+~~sudo apt-get install openssl  # Debian/Ubuntu~~
+~~sudo yum install openssl      # CentOS/RHEL~~
+~~sudo pacman -S openssl        # Arch Linux~~
 
-For Mac:
+~~For Mac:~~
 
-brew install openssl
+~~brew install openssl~~
 
-2. Download the api_key.enc file from this repository.
+~~2. Download the api_key.enc file from this repository.~~
 
-3. Move the api_key.enc file to your desired directory (e.g., your home directory).
+~~3. Move the api_key.enc file to your desired directory (e.g., your home directory).~~
 
-4. Open a terminal and navigate to the directory containing api_key.enc. For example:
+~~4. Open a terminal and navigate to the directory containing api_key.enc. For example:~~
 
-cd ~/Desktop
+~~cd /Desktop~~
 
-5. Run the following command to decrypt the API key:
+~~5. Run the following command to decrypt the API key:~~
 
-openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2
+~~openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2~~
 
-6. This will create a file named api_key.txt in the same directory containing the decrypted API key.
+~~6. This will create a file named api_key.txt in the same directory containing the decrypted API key.~~
 
 
 ## Getting Started
@@ -69,7 +69,8 @@ To run this project locally:
    git clone https://github.com/yourusername/presidential-debate-simulator.git
 2. Navigate to directory:
    cd presidential-debate-simulator
-3. Open script.js and paste the decrypted apiKey into line 39 and 321 and click save
+~~3. Open script.js and paste the decrypted apiKey into line 39 and 321 and click save~~
+3. Create an API via openai.com and paste the apiKey into line 39 and 321 and click save. 
    
 4. Open index.html in your web browser. (Best using Chrome)
 
