@@ -82,3 +82,10 @@ To run this project locally:
 
 This project is licensed under the Testing Purposes License - see the [LICENSE] file for details.
 
+## text data source
+1. Trump
+https://docs.google.com/document/d/12vgqTrVF0JSSBvXW6xwxdUVT9w36WXVVYiTvjRKfRzw/edit
+
+2. Harris
+https://docs.google.com/document/d/1-m0UCzJ7CY_NwdJid91wIa0JwDxwfkBYnpSS6FDiHAg/edit
+
