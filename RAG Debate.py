@@ -58,7 +58,7 @@ def generate_response(query, vectorizer, vectors, paragraphs, api_key):
     return generated_text
 
 def main():
-    file_path = 'word.docx'
+    file_path = 'sources/word.docx'
     raw_paragraphs = extract_text_from_docx(file_path)
     processed_paragraphs = preprocess_paragraphs(raw_paragraphs)
     
@@ -74,8 +74,12 @@ def main():
                 break
             response = generate_response(query, vectorizer, vectors, processed_paragraphs, api_key)
             print(f"Candidate A: {response}")
+            # TODO make it so you can get the file names of the retrieved texts
+            # TODO add query, retrieved text A, retrieved text B, response A, response B, and filenames to store somewhere 
 
     chatbot()
+    # TODO save the game data into a csv file
+
 
 if __name__ == "__main__":
     main()
