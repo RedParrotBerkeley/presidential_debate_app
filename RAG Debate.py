@@ -4,6 +4,8 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import csv
+import os
 
 # Function to extract text from a docx file
 def extract_text_from_docx(file_path):
@@ -55,31 +57,48 @@ def generate_response(query, vectorizer, vectors, paragraphs, api_key):
     
     # Extract the relevant portion of the generated text
     generated_text = response.choices[0]['message']['content'].strip()
-    return generated_text
+    return generated_text, retrieved_text
+
+def save_to_csv(data, filename='chatbot_data.csv'):
+    file_exists = os.path.isfile(filename)
+    
+    with open(filename, mode='a', newline='') as file:
+        writer = csv.writer(file, delimiter='\t')  # Use tab as the delimiter instead of comma
+        if not file_exists:
+            writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename']) #set headers
+        writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
+
+
 
 def main():
-    file_path = 'sources/word.docx'
+    file_path = 'word.docx'
     raw_paragraphs = extract_text_from_docx(file_path)
     processed_paragraphs = preprocess_paragraphs(raw_paragraphs)
     
     vectorizer, vectors = vectorize_paragraphs(processed_paragraphs)
     
     # Replace with OpenAI API key
-    api_key = 'Paste from slack do NOT commit changes with API key'
+    api_key = 'INSERT API'
 
     def chatbot():
         while True:
             query = input("You: ")
             if query.lower() in ['exit', 'quit']:
                 break
-            response = generate_response(query, vectorizer, vectors, processed_paragraphs, api_key)
+            response, retrieved_text = generate_response(query, vectorizer, vectors, processed_paragraphs, api_key)
             print(f"Candidate A: {response}")
-            # TODO make it so you can get the file names of the retrieved texts
-            # TODO add query, retrieved text A, retrieved text B, response A, response B, and filenames to store somewhere 
-
+            
+            # Save query, retrieved text, response, and filename to CSV in the root directory
+            data = {
+                'query': query,
+                'retrieved_text': retrieved_text,
+                'response': response,
+                'filename': os.path.basename(file_path)
+}
+            save_to_csv(data)
+            # TODO: Retrieve text from candidate B and save to CSV
+            
     chatbot()
-    # TODO save the game data into a csv file
-
 
 if __name__ == "__main__":
     main()
