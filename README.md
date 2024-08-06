@@ -91,3 +91,8 @@ https://docs.google.com/document/d/1-m0UCzJ7CY_NwdJid91wIa0JwDxwfkBYnpSS6FDiHAg/
 
 3. Governers
 https://docs.google.com/document/d/16OO5ZqDZtAyE6GW79tesC7MaJ5z5jiVP2HwZ7Fu4VyI/edit
+
+4. Steve Garvey
+https://docs.google.com/document/d/16RuK5aP-nP5hRO_TT7V9IV14zJStBbt_6cqh84_C--I/edit
+
+5. Adam Schiff
