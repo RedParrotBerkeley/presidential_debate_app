@@ -1,19 +1,17 @@
 import openai
-from docx import Document
-import re
-from sklearn.feature_extraction.text import TfidfVectorizer
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-import csv
 import os
+import re
+import pickle
+import csv
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import tiktoken  # OpenAI's tokenizer
 
-# Function to extract text from a docx file
-def extract_text_from_docx(file_path):
-    doc = Document(file_path)
-    full_text = []
-    for para in doc.paragraphs:
-        full_text.append(para.text)
-    return full_text  # Return a list of paragraphs
+# Function to extract text from a .txt file
+def extract_text_from_txt(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return file.read().split('\n\n')  # Return a list of paragraphs separated by double newlines
 
 # Function to preprocess text
 def preprocess_text(text):
@@ -37,16 +35,35 @@ def search(query, vectorizer, vectors, paragraphs):
     idx = np.argmax(similarities)
     return paragraphs[idx]
 
+# Function to estimate the token length of text
+def estimate_tokens(text, model_name='gpt-4'):
+    encoding = tiktoken.encoding_for_model(model_name)
+    return len(encoding.encode(text))
+
+# Function to truncate text to fit within a token limit
+def truncate_text_to_fit(text, token_limit, model_name='gpt-4'):
+    encoding = tiktoken.encoding_for_model(model_name)
+    encoded = encoding.encode(text)
+    return encoding.decode(encoded[:token_limit])
+
 # Function to generate a response using the ChatGPT model
-def generate_response(query, vectorizer, vectors, paragraphs, api_key):
+def generate_response(query, vectorizer, vectors, paragraphs, api_key, max_tokens=4096):
     openai.api_key = api_key
     retrieved_text = search(query, vectorizer, vectors, paragraphs)
+    print(f"Retrieved Text: {retrieved_text[:200]}...")  # Debug statement to show only the first 200 characters
     prompt = f"Context: {retrieved_text}\nQuestion: {query}\nAnswer:"
     
+    # Adjust the prompt if it exceeds the maximum token length
+    if estimate_tokens(prompt) > max_tokens:
+        context_length = max_tokens - estimate_tokens(f"Question: {query}\nAnswer:")
+        truncated_retrieved_text = truncate_text_to_fit(retrieved_text, context_length)
+        prompt = f"Context: {truncated_retrieved_text}\nQuestion: {query}\nAnswer:"
+    
+    print(f"Prompt: {prompt[:200]}...")  # Debug statement to show only the first 200 characters
     response = openai.ChatCompletion.create(
-        model="gpt-4",  
+        model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are providing responses based on the content of the provided document about Donald Trump, never refer to the document but act like you are answering as Donald Trump. Stick to the facts and avoid mannerisms, never refer to yourself as Donald Trump. Keep the answer short, clear, and concise."},
+            {"role": "system", "content": "You are providing a summary limited to the content of the provided document about Donald Trump. Stick to the facts and avoid mannerisms, never refer to yourself as Donald Trump. Keep the answer short, clear, and concise."},
             {"role": "user", "content": prompt}
         ],
         max_tokens=100,
@@ -57,48 +74,148 @@ def generate_response(query, vectorizer, vectors, paragraphs, api_key):
     
     # Extract the relevant portion of the generated text
     generated_text = response.choices[0]['message']['content'].strip()
+    print(f"Generated Response: {generated_text}")  # Debug statement
     return generated_text, retrieved_text
 
+# Function to save data to CSV
 def save_to_csv(data, filename='chatbot_data.csv'):
     file_exists = os.path.isfile(filename)
     
     with open(filename, mode='a', newline='') as file:
-        writer = csv.writer(file, delimiter='\t')  # Use tab as the delimiter instead of comma
+        writer = csv.writer(file, delimiter='\t')  # Use tab as the delimiter
         if not file_exists:
-            writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename']) #set headers
+            writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename'])  # Proper headers
         writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
 
+def save_preprocessed_data(paragraphs, file_prefix='preprocessed_data'):
+    with open(f'{file_prefix}_paragraphs.pkl', 'wb') as file:
+        pickle.dump(paragraphs, file)
 
+def load_preprocessed_data(file_prefix='preprocessed_data'):
+    with open(f'{file_prefix}_paragraphs.pkl', 'rb') as file:
+        paragraphs = pickle.load(file)
+    return paragraphs
 
-def main():
-    file_path = 'word.docx'
-    raw_paragraphs = extract_text_from_docx(file_path)
-    processed_paragraphs = preprocess_paragraphs(raw_paragraphs)
+# Function to chunk paragraphs into smaller pieces based on token length
+def chunk_paragraphs(paragraphs, filenames, max_tokens=2000, model_name='gpt-4'):
+    chunked_paragraphs = []
+    current_chunk = []
+    current_length = 0
+    chunk_filenames = []
+    current_filenames = []
     
-    vectorizer, vectors = vectorize_paragraphs(processed_paragraphs)
+    for paragraph, filename in zip(paragraphs, filenames):
+        paragraph_length = estimate_tokens(paragraph, model_name)
+        if current_length + paragraph_length > max_tokens:
+            chunked_paragraphs.append((current_chunk, current_filenames))
+            current_chunk = [paragraph]
+            current_length = paragraph_length
+            current_filenames = [filename]
+        else:
+            current_chunk.append(paragraph)
+            current_length += paragraph_length
+            current_filenames.append(filename)
     
-    # Replace with OpenAI API key
-    api_key = 'INSERT API'
+    if current_chunk:
+        chunked_paragraphs.append((current_chunk, current_filenames))
+    
+    return chunked_paragraphs
 
-    def chatbot():
-        while True:
-            query = input("You: ")
-            if query.lower() in ['exit', 'quit']:
-                break
-            response, retrieved_text = generate_response(query, vectorizer, vectors, processed_paragraphs, api_key)
+def chatbot(processed_paragraphs, all_filenames, api_key):
+    best_response = None
+    best_similarity = 0
+    best_retrieved_text = None
+
+    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, max_tokens=2000, model_name='gpt-4')
+    print(f"Number of chunks: {len(chunked_paragraphs)}")  # Debug statement
+    for idx, (chunk, filenames) in enumerate(chunked_paragraphs):
+        print(f"Chunk {idx + 1}: Contains {len(chunk)} paragraphs from files: {set(filenames)}")  # Debug each chunk
+    
+    while True:
+        query = input("You: ")
+        if query.lower() in ['exit', 'quit']:
+            break
+
+        all_responses = []
+        found_relevant_info = False
+        best_response = None
+        best_similarity = 0
+        best_retrieved_text = None
+        
+        for i, (chunk, filenames) in enumerate(chunked_paragraphs):
+            if not chunk:
+                continue
+            vectorizer, vectors = vectorize_paragraphs(chunk)
+            if vectors.shape[0] == 0:
+                continue
+            try:
+                print(f"Processing chunk {i+1}/{len(chunked_paragraphs)} from files: {set(filenames)}")  # Debug statement
+                query_vec = vectorizer.transform([query])
+                similarities = cosine_similarity(query_vec, vectors).flatten()
+                idx = np.argmax(similarities)
+                if similarities[idx] > best_similarity:
+                    best_similarity = similarities[idx]
+                    best_retrieved_text = chunk[idx]
+                    best_response = generate_response(query, vectorizer, vectors, chunk, api_key, max_tokens=2000)
+                    found_relevant_info = True
+            except ValueError as e:
+                print(e)
+                continue
+
+        if not found_relevant_info:
+            print("No relevant info found, reprocessing documents...")  # Debug statement
+            # Reprocess and vectorize the documents if no relevant info is found
+            # (Reprocessing logic here)
+
+        if best_response:
+            response, retrieved_text = best_response
             print(f"Candidate A: {response}")
-            
-            # Save query, retrieved text, response, and filename to CSV in the root directory
             data = {
                 'query': query,
-                'retrieved_text': retrieved_text,
+                'retrieved_text': best_retrieved_text,
                 'response': response,
-                'filename': os.path.basename(file_path)
-}
+                'filename': 'N/A'  # Update if you have specific filenames
+            }
             save_to_csv(data)
-            # TODO: Retrieve text from candidate B and save to CSV
-            
-    chatbot()
+
+def main():
+    folder_path = 'Downloads/archive'
+    preprocessed_data_prefix = 'preprocessed_data'
+    
+    try:
+        # Load preprocessed data and filenames
+        processed_paragraphs = load_preprocessed_data(preprocessed_data_prefix)
+        with open(f'{preprocessed_data_prefix}_filenames.pkl', 'rb') as file:
+            all_filenames = pickle.load(file)
+        print(f"Loaded {len(processed_paragraphs)} preprocessed paragraphs")  # Debug statement
+    except FileNotFoundError:
+        # Preprocess and save data if not already done
+        all_texts = []
+        all_filenames = []
+        file_count = 0
+        
+        # List all files in the directory
+        for filename in os.listdir(folder_path):
+            if filename.endswith('.txt'):
+                file_count += 1
+                file_path = os.path.join(folder_path, filename)
+                raw_paragraphs = extract_text_from_txt(file_path)
+                print(f"Processing file: {filename} with {len(raw_paragraphs)} paragraphs")  # Debug statement
+                all_texts.extend(raw_paragraphs)
+                all_filenames.extend([filename] * len(raw_paragraphs))
+        
+        processed_paragraphs = preprocess_paragraphs(all_texts)
+        print(f"Processed {len(processed_paragraphs)} paragraphs from {file_count} files")  # Debug statement
+        
+        # Save the paragraphs and filenames
+        with open(f'{preprocessed_data_prefix}_filenames.pkl', 'wb') as file:
+            pickle.dump(all_filenames, file)
+        save_preprocessed_data(processed_paragraphs, preprocessed_data_prefix)
+    
+    # Replace with your OpenAI API key
+    api_key = 'insert here'
+
+    chatbot(processed_paragraphs, all_filenames, api_key)
 
 if __name__ == "__main__":
     main()
