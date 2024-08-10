@@ -83,7 +83,7 @@ def preprocess_and_vectorize_combined(folder_path, max_tokens=2000, model_name='
     with open('vectorized_chunks.pkl', 'wb') as file:
         pickle.dump(vectorized_chunks, file)
 
-# Function to generate a response using the ChatGPT model - continue with prompt engineering
+# Function to generate a response using the ChatGPT model
 def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096):
     openai.api_key = api_key
 
@@ -115,7 +115,7 @@ def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096)
     generated_text = response.choices[0]['message']['content'].strip()
     return generated_text, filename
 
-# Function to save data to CSV - work in progress - needs refinement
+# Function to save data to CSV
 def save_to_csv(data, filename='chatbot_data.csv'):
     file_exists = os.path.isfile(filename)
     
@@ -125,7 +125,26 @@ def save_to_csv(data, filename='chatbot_data.csv'):
             writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename'])  # Proper headers
         writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
 
-# Chatbot function modified to handle preprocess_and_vectorize_combined
+def save_preprocessed_data(chunked_paragraphs, vectors, vectorizer, filenames, file_prefix='preprocessed_data'):
+    with open(f'{file_prefix}_chunks.pkl', 'wb') as file:
+        pickle.dump(chunked_paragraphs, file)
+    with open(f'{file_prefix}_vectors.pkl', 'wb') as file:
+        pickle.dump(vectors, file)
+    with open(f'{file_prefix}_vectorizer.pkl', 'wb') as file:
+        pickle.dump(vectorizer, file)
+    with open(f'{file_prefix}_filenames.pkl', 'wb') as file:
+        pickle.dump(filenames, file)
+
+
+def truncate_text_to_fit(text, max_tokens):
+    encoding = tiktoken.encoding_for_model('gpt-4')
+    tokens = encoding.encode(text)
+    if len(tokens) <= max_tokens:
+        return text
+    truncated_tokens = tokens[:max_tokens]
+    return encoding.decode(truncated_tokens)
+    
+# Chatbot function
 def chatbot_with_prevectorized_chunks(api_key):
     with open('vectorized_chunks.pkl', 'rb') as file:
         vectorized_chunks = pickle.load(file)
@@ -176,7 +195,7 @@ def main():
     all_filenames = []
     file_count = 0
     
-    # List all files in the directory - part of my debugging efforts - can be removed later
+    # List all files in the directory
     for filename in os.listdir(folder_path):
         if filename.endswith('.txt'):
             file_count += 1
@@ -189,14 +208,20 @@ def main():
     processed_paragraphs = preprocess_paragraphs(all_texts)
     print(f"Processed {len(processed_paragraphs)} paragraphs from {file_count} files")  # Debug statement
     
-    # Save the paragraphs and filenames
-    save_preprocessed_data(processed_paragraphs, all_filenames)
+    # Chunk paragraphs
+    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, max_tokens=2000, model_name='gpt-4')
     
-    # Vectorize the preprocessed paragraphs
-    preprocess_and_vectorize(folder_path)
+    # Vectorize the chunked paragraphs
+    vectorizer = TfidfVectorizer()
+    all_chunks = [chunk for chunk, filenames in chunked_paragraphs]
+    flattened_chunks = [paragraph for chunk in all_chunks for paragraph in chunk if paragraph.strip()]
+    vectors = vectorizer.fit_transform(flattened_chunks)
+    
+    # Save the chunked paragraphs, vectors, vectorizer, and filenames
+    save_preprocessed_data(chunked_paragraphs, vectors, vectorizer, all_filenames)
     
     # Replace with your OpenAI API key
-    api_key = 'add api'
+    api_key = 'API GOES HERE'
 
     chatbot_with_prevectorized_chunks(api_key)
 
