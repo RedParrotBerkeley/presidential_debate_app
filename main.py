@@ -28,6 +28,21 @@ FastAPI Application Flow:
 
 6. **Main Function**
     - Runs the FastAPI application using Uvicorn.
+
+---
+*HOW TO USE*
+---
+1. From command prompt enter 
+```sh
+uvicorn main:app --reload
+```
+2. Copy URL and paste it into browser. 
+
+3. Open another prompt and use a curl command to make a post to the server. 
+```sh
+curl -X POST "http://127.0.0.1:8000/query" -H "Content-Type: application/json" -d "{\"query\": \"what are your thoughts on immigration?\"}"
+```
+3(Alternate). Copy URL and paste it into the browser. After the URL add "/docs" and hit enter for a UI. 
 """
 
 from fastapi import FastAPI, HTTPException
