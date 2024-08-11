@@ -14,23 +14,25 @@ def estimate_tokens(text, model_name='gpt-4o-mini'):
     return len(encoding.encode(text))
 
 # Function to generate a response using the ChatGPT model
-def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096):
+def generate_response(query, retrieved_texts, filenames, api_key, max_tokens=4096):
     
     client = openai.OpenAI(
     api_key=api_key
     )
 
+    context = ', '.join(retrieved_texts)
+
     system_message = {
         "role": "system",
-        "content": "You are a neutral and monotone responder. Do not ever mention the speaker. Answer questions based only on the provided context. Avoid any mention of other parties, candidates, or specific individuals. Stick to the facts, avoid any mannerisms or opinions, and keep the answer short, clear, and concise. Respond directly as if you are the speaker."
+        "content": "Answer the question as if you are the speaker. Answer with facts based only on the provided context, and if the context does not have enough relevant information, say that you do not have enough information to answer the question. Avoid any mention of specific political parties or candidates. Keep the answer short, clear, and concise."
     }
 
-    prompt = f"Context: {retrieved_text}\n\nQuestion: {query}\n\nAnswer:"
+    prompt = f"Context: {context}\n\nQuestion: {query}\n\nAnswer:"
 
     # Adjust the prompt if it exceeds the maximum token length
     if estimate_tokens(prompt) > max_tokens:
         context_length = max_tokens - estimate_tokens(f"Question: {query}\n\nAnswer:")
-        truncated_retrieved_text = truncate_text_to_fit(retrieved_text, context_length)
+        truncated_retrieved_text = truncate_text_to_fit(context, context_length)
         prompt = f"Context: {truncated_retrieved_text}\n\nQuestion: {query}\n\nAnswer:"
     
     response = client.chat.completions.create(
@@ -46,10 +48,10 @@ def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096)
 
     generated_text = response.choices[0].message.content.strip()
     
-    return generated_text, filename
+    return generated_text, filenames
 
 # Function to save data to CSV
-def save_to_csv(data, filename='chatbot_data.csv'):
+def save_to_csv(data, filename='chatbot_data.tsv'):
     file_exists = os.path.isfile(filename)
     
     with open(filename, mode='a', newline='') as file:
@@ -57,17 +59,6 @@ def save_to_csv(data, filename='chatbot_data.csv'):
         if not file_exists:
             writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename'])  # Proper headers
         writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
-
-def save_preprocessed_data(chunked_paragraphs, vectors, vectorizer, filenames, file_prefix='preprocessed_data'):
-    with open(f'{file_prefix}_chunks.pkl', 'wb') as file:
-        pickle.dump(chunked_paragraphs, file)
-    with open(f'{file_prefix}_vectors.pkl', 'wb') as file:
-        pickle.dump(vectors, file)
-    with open(f'{file_prefix}_vectorizer.pkl', 'wb') as file:
-        pickle.dump(vectorizer, file)
-    with open(f'{file_prefix}_filenames.pkl', 'wb') as file:
-        pickle.dump(filenames, file)
-
 
 def truncate_text_to_fit(text, max_tokens):
     encoding = tiktoken.encoding_for_model('gpt-4')
@@ -78,7 +69,7 @@ def truncate_text_to_fit(text, max_tokens):
     return encoding.decode(truncated_tokens)
     
 # Chatbot function
-def chatbot_with_prevectorized_chunks(api_key):
+def chatbot_with_prevectorized_chunks(api_key, min_similarity=.15):
     with open('vectorized_chunks.pkl', 'rb') as file:
         vectorized_chunks = pickle.load(file)
 
@@ -87,37 +78,36 @@ def chatbot_with_prevectorized_chunks(api_key):
         if query.lower() in ['exit', 'quit']:
             break
 
-        best_similarity = -1
-        best_retrieved_text = None
-        best_filename = None
+        best_retrieved_texts = []
+        best_filenames = []
 
         for vectorizer, vectors, chunk, filenames in vectorized_chunks:
             query_vec = vectorizer.transform([query])
             similarities = cosine_similarity(query_vec, vectors).flatten()
             idx = np.argmax(similarities)
 
-            if similarities[idx] > best_similarity:
-                best_similarity = similarities[idx]
-                best_retrieved_text = chunk[idx]
-                best_filename = filenames[idx]
+            if similarities[idx] > min_similarity:
+                print(similarities[idx])
+                best_retrieved_texts.append(chunk[idx])
+                best_filenames.append(filenames[idx])
 
-        if best_retrieved_text:
-            best_response, best_filename = generate_response(query, best_retrieved_text, best_filename, api_key, max_tokens=2000)
+        if best_retrieved_texts != "":
+            best_response, best_filenames = generate_response(query, best_retrieved_texts, best_filenames, api_key, max_tokens=2000)
         else:
             best_response = "No suitable chunk found."
-            best_filename = 'N/A'
+            best_filenames = 'N/A'
 
         if best_response:
             data = {
                 'query': query,
-                'retrieved_text': best_retrieved_text,
+                'retrieved_text': best_retrieved_texts,
                 'response': best_response,
-                'filename': best_filename
+                'filename': best_filenames
             }
             save_to_csv(data)
 
-        print(f"Filename: {best_filename}")
-        print(f"Context: {best_retrieved_text}")
+        print(f"Filename: {best_filenames}")
+        print(f"Context: {best_retrieved_texts}")
         print(f"Response: {best_response}")
 
 # Main function
@@ -126,8 +116,8 @@ def main():
     
     # Replace with your OpenAI API key
     api_key = 'insert-your-api-key'
-    
-    chatbot_with_prevectorized_chunks(api_key)
+
+    chatbot_with_prevectorized_chunks(api_key, min_similarity=.17)
 
 if __name__ == "__main__":
     main()

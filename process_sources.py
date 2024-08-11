@@ -30,30 +30,26 @@ def estimate_tokens(text, model_name='gpt-4'):
     return len(encoding.encode(text))
 
 # Function to chunk paragraphs into smaller pieces based on token length
-def chunk_paragraphs(paragraphs, filenames, max_tokens=2000, model_name='gpt-4'):
+def chunk_paragraphs(paragraphs, filenames, chunk_size=2000, model_name='gpt-4'):
     chunked_paragraphs = []
     current_chunk = []
-    current_length = 0
     current_filenames = []
     
     for paragraph, filename in zip(paragraphs, filenames):
-        paragraph_length = estimate_tokens(paragraph, model_name)
-        if current_length + paragraph_length > max_tokens:
+        paragraph_length = len(paragraph)
+        current_filenames = [filename]
+        print(filename)
+        while paragraph_length > chunk_size:
+            current_chunk = [paragraph[:chunk_size]]
             chunked_paragraphs.append((current_chunk, current_filenames))
-            current_chunk = [paragraph]
-            current_length = paragraph_length
-            current_filenames = [filename]
-        else:
-            current_chunk.append(paragraph)
-            current_length += paragraph_length
-            current_filenames.append(filename)
-    
-    if current_chunk:
-        chunked_paragraphs.append((current_chunk, current_filenames))
+            paragraph = paragraph[chunk_size:]
+            paragraph_length = len(paragraph)
+        if (paragraph_length > 0) and (paragraph_length < chunk_size):
+            chunked_paragraphs.append(([paragraph], [filename]))
     
     return chunked_paragraphs
 
-def preprocess_and_vectorize_combined(folder_path, max_tokens=2000, model_name='gpt-4'):
+def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name='gpt-4'):
     all_texts = []
     all_filenames = []
 
@@ -65,7 +61,7 @@ def preprocess_and_vectorize_combined(folder_path, max_tokens=2000, model_name='
             all_filenames.extend([filename] * len(raw_paragraphs))
 
     processed_paragraphs = preprocess_paragraphs(all_texts)
-    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, max_tokens, model_name)
+    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, chunk_size, model_name)
 
     vectorizer = TfidfVectorizer()
     all_chunks = [chunk for chunk, filenames in chunked_paragraphs]
@@ -77,7 +73,6 @@ def preprocess_and_vectorize_combined(folder_path, max_tokens=2000, model_name='
     vectorized_chunks = []
     for chunk, filenames in chunked_paragraphs:
         if chunk:
-            print(filenames)
             vectors = vectorizer.transform(chunk)
             if vectors.shape[0] > 0:
                 vectorized_chunks.append((vectorizer, vectors, chunk, filenames))
@@ -88,7 +83,7 @@ def preprocess_and_vectorize_combined(folder_path, max_tokens=2000, model_name='
 
 def main():
     folder_path = 'archive/'
-    preprocess_and_vectorize_combined(folder_path)
+    preprocess_and_vectorize_combined(folder_path, chunk_size=1000)
 
 if __name__ == "__main__":
     main()
