@@ -8,84 +8,17 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
 
-# Function to extract text from a .txt file
-def extract_text_from_txt(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        return file.read().split('\n\n')  # Return a list of paragraphs separated by double newlines
-
-# Function to preprocess text
-def preprocess_text(text):
-    text = re.sub(r'\s+', ' ', text)
-    return text.lower()
-
-# Function to preprocess paragraphs
-def preprocess_paragraphs(paragraphs):
-    return [preprocess_text(para) for para in paragraphs]
-
 # Function to estimate the token length of text
-def estimate_tokens(text, model_name='gpt-4'):
+def estimate_tokens(text, model_name='gpt-4o-mini'):
     encoding = tiktoken.encoding_for_model(model_name)
     return len(encoding.encode(text))
 
-# Function to chunk paragraphs into smaller pieces based on token length
-def chunk_paragraphs(paragraphs, filenames, max_tokens=2000, model_name='gpt-4'):
-    chunked_paragraphs = []
-    current_chunk = []
-    current_length = 0
-    current_filenames = []
-    
-    for paragraph, filename in zip(paragraphs, filenames):
-        paragraph_length = estimate_tokens(paragraph, model_name)
-        if current_length + paragraph_length > max_tokens:
-            chunked_paragraphs.append((current_chunk, current_filenames))
-            current_chunk = [paragraph]
-            current_length = paragraph_length
-            current_filenames = [filename]
-        else:
-            current_chunk.append(paragraph)
-            current_length += paragraph_length
-            current_filenames.append(filename)
-    
-    if current_chunk:
-        chunked_paragraphs.append((current_chunk, current_filenames))
-    
-    return chunked_paragraphs
-
-# Preprocess, chunk, and vectorize in one step
-def preprocess_and_vectorize_combined(folder_path, max_tokens=2000, model_name='gpt-4'):
-    all_texts = []
-    all_filenames = []
-
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.txt'):
-            file_path = os.path.join(folder_path, filename)
-            raw_paragraphs = extract_text_from_txt(file_path)
-            all_texts.extend(raw_paragraphs)
-            all_filenames.extend([filename] * len(raw_paragraphs))
-
-    processed_paragraphs = preprocess_paragraphs(all_texts)
-    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, max_tokens, model_name)
-
-    vectorizer = TfidfVectorizer()
-    all_chunks = [chunk for chunk, filenames in chunked_paragraphs]
-    flattened_chunks = [paragraph for chunk in all_chunks for paragraph in chunk if paragraph.strip()]
-
-    if flattened_chunks:
-        vectorizer.fit(flattened_chunks)
-
-    vectorized_chunks = []
-    for chunk, filenames in chunked_paragraphs:
-        if chunk:
-            vectors = vectorizer.transform(chunk)
-            if vectors.shape[0] > 0:
-                vectorized_chunks.append((vectorizer, vectors, chunk, filenames))
-
-    with open('vectorized_chunks.pkl', 'wb') as file:
-        pickle.dump(vectorized_chunks, file)
-
 # Function to generate a response using the ChatGPT model
 def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096):
-    openai.api_key = api_key
+    
+    client = openai.OpenAI(
+    api_key=api_key
+    )
 
     system_message = {
         "role": "system",
@@ -99,20 +32,20 @@ def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096)
         context_length = max_tokens - estimate_tokens(f"Question: {query}\n\nAnswer:")
         truncated_retrieved_text = truncate_text_to_fit(retrieved_text, context_length)
         prompt = f"Context: {truncated_retrieved_text}\n\nQuestion: {query}\n\nAnswer:"
+    
+    response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                system_message,
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=100,
+            n=1,
+            temperature=0.1
+        )
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            system_message,
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=100,
-        n=1,
-        stop=None,
-        temperature=0.7,
-    )
-
-    generated_text = response.choices[0]['message']['content'].strip()
+    generated_text = response.choices[0].message.content.strip()
+    
     return generated_text, filename
 
 # Function to save data to CSV
@@ -184,45 +117,16 @@ def chatbot_with_prevectorized_chunks(api_key):
             save_to_csv(data)
 
         print(f"Filename: {best_filename}")
+        print(f"Context: {best_retrieved_text}")
         print(f"Response: {best_response}")
 
 # Main function
 def main():
-    folder_path = 'Downloads/archive'
-    
-    # Preprocess and save data
-    all_texts = []
-    all_filenames = []
-    file_count = 0
-    
-    # List all files in the directory
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.txt'):
-            file_count += 1
-            file_path = os.path.join(folder_path, filename)
-            raw_paragraphs = extract_text_from_txt(file_path)
-            print(f"Processing file: {filename} with {len(raw_paragraphs)} paragraphs")  # Debug statement
-            all_texts.extend(raw_paragraphs)
-            all_filenames.extend([filename] * len(raw_paragraphs))
-    
-    processed_paragraphs = preprocess_paragraphs(all_texts)
-    print(f"Processed {len(processed_paragraphs)} paragraphs from {file_count} files")  # Debug statement
-    
-    # Chunk paragraphs
-    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, max_tokens=2000, model_name='gpt-4')
-    
-    # Vectorize the chunked paragraphs
-    vectorizer = TfidfVectorizer()
-    all_chunks = [chunk for chunk, filenames in chunked_paragraphs]
-    flattened_chunks = [paragraph for chunk in all_chunks for paragraph in chunk if paragraph.strip()]
-    vectors = vectorizer.fit_transform(flattened_chunks)
-    
-    # Save the chunked paragraphs, vectors, vectorizer, and filenames
-    save_preprocessed_data(chunked_paragraphs, vectors, vectorizer, all_filenames)
+    folder_path = 'archive/'
     
     # Replace with your OpenAI API key
-    api_key = 'API GOES HERE'
-
+    api_key = 'insert-your-api-key'
+    
     chatbot_with_prevectorized_chunks(api_key)
 
 if __name__ == "__main__":
