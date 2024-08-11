@@ -22,7 +22,7 @@ def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096)
 
     system_message = {
         "role": "system",
-        "content": "You are a neutral and monotone responder. Do not ever mention the speaker. Answer questions based only on the provided context. Avoid any mention of other parties, candidates, or specific individuals. Stick to the facts, avoid any mannerisms or opinions, and keep the answer short, clear, and concise. Respond directly as if you are the speaker."
+        "content": "Answer the question as if you are the speaker. Answer with facts based only on the provided context, and if the context does not have enough relevant information, say that you do not have enough information to answer the question. Avoid any mention of specific political parties or candidates. Keep the answer short, clear, and concise."
     }
 
     prompt = f"Context: {retrieved_text}\n\nQuestion: {query}\n\nAnswer:"
@@ -49,7 +49,7 @@ def generate_response(query, retrieved_text, filename, api_key, max_tokens=4096)
     return generated_text, filename
 
 # Function to save data to CSV
-def save_to_csv(data, filename='chatbot_data.csv'):
+def save_to_csv(data, filename='chatbot_data.tsv'):
     file_exists = os.path.isfile(filename)
     
     with open(filename, mode='a', newline='') as file:
@@ -57,17 +57,6 @@ def save_to_csv(data, filename='chatbot_data.csv'):
         if not file_exists:
             writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename'])  # Proper headers
         writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
-
-def save_preprocessed_data(chunked_paragraphs, vectors, vectorizer, filenames, file_prefix='preprocessed_data'):
-    with open(f'{file_prefix}_chunks.pkl', 'wb') as file:
-        pickle.dump(chunked_paragraphs, file)
-    with open(f'{file_prefix}_vectors.pkl', 'wb') as file:
-        pickle.dump(vectors, file)
-    with open(f'{file_prefix}_vectorizer.pkl', 'wb') as file:
-        pickle.dump(vectorizer, file)
-    with open(f'{file_prefix}_filenames.pkl', 'wb') as file:
-        pickle.dump(filenames, file)
-
 
 def truncate_text_to_fit(text, max_tokens):
     encoding = tiktoken.encoding_for_model('gpt-4')
@@ -97,6 +86,7 @@ def chatbot_with_prevectorized_chunks(api_key):
             idx = np.argmax(similarities)
 
             if similarities[idx] > best_similarity:
+                print(similarities[idx])
                 best_similarity = similarities[idx]
                 best_retrieved_text = chunk[idx]
                 best_filename = filenames[idx]
