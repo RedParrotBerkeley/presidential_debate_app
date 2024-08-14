@@ -101,6 +101,7 @@ To run this project locally:
 > - Defines the `/query` endpoint to handle user queries and generate responses.
 > - Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.
 
+---
 
 > ### 08/13/2024
 > 
