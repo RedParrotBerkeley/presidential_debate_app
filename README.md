@@ -83,6 +83,7 @@ To run this project locally:
 
 ## Updates
 <u>**08/07/2024**</u>  
+
 Added Files  
 * main.py : this file includes functions from rag_debate.py - Use rag_debate.py to run inside notebook. main.py requires server.  
 
@@ -98,6 +99,7 @@ Key Features:
 * Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.  
 
 <u>**08/13/2024**</u>  
+
 Added Files  
 * requirements.txt  
 
