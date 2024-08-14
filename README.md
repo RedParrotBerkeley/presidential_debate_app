@@ -82,7 +82,7 @@ To run this project locally:
 
 
 ## Updates
-**08/07/2024**
+**08/07/2024**  
 Added Files  
 -main.py : this file includes functions from rag_debate.py - Use rag_debate.py to run inside notebook. main.py requires server.  
 
@@ -97,7 +97,7 @@ Key Features:
 -Defines the /query endpoint to handle user queries and generate responses.  
 -Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.  
 
-**08/13/2024**
+**08/13/2024**  
 Added Files  
 -requirements.txt  
 
