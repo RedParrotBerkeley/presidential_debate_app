@@ -8,8 +8,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
 
+#insert desired model 
+model = 'gpt-4o-mini'
+
 # Function to estimate the token length of text
-def estimate_tokens(text, model_name='gpt-4o-mini'):
+def estimate_tokens(text, model_name='model'):
     encoding = tiktoken.encoding_for_model(model_name)
     return len(encoding.encode(text))
 
@@ -36,7 +39,7 @@ def generate_response(query, retrieved_texts, filenames, api_key, max_tokens=409
         prompt = f"Context: {truncated_retrieved_text}\n\nQuestion: {query}\n\nAnswer:"
     
     response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model= model,
             messages=[
                 system_message,
                 {"role": "user", "content": prompt}
@@ -61,7 +64,7 @@ def save_to_csv(data, filename='chatbot_data.tsv'):
         writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
 
 def truncate_text_to_fit(text, max_tokens):
-    encoding = tiktoken.encoding_for_model('gpt-4')
+    encoding = tiktoken.encoding_for_model(model)
     tokens = encoding.encode(text)
     if len(tokens) <= max_tokens:
         return text
