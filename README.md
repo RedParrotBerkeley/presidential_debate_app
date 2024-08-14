@@ -84,7 +84,7 @@ To run this project locally:
 ## Updates
 <u>**08/07/2024**</u>  
 
-Added Files  
+Added Files:  
 * main.py : this file includes functions from rag_debate.py - Use rag_debate.py to run inside notebook. main.py requires server.  
 
 Purpose: 
@@ -100,10 +100,10 @@ Key Features:
 
 <u>**08/13/2024**</u>  
 
-Added Files  
+Added Files:  
 * requirements.txt  
 
-Update  
+Update:  
 * RAG Debate.py   
 * Add - main = 'insert model of choice'
 
