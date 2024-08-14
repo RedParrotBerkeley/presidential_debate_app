@@ -81,7 +81,10 @@ To run this project locally:
 * Categorize raw questions into broader topics using categorize.py. This takes in questions from uncategorizedQuestions.csv and puts them through ChatGPT to classify them into categories and outputs these in a new csv. You will need to create an api key and adjust the code for this to work for you.
 
 
-## Updates
+## 🔄 Updates
+
+Stay informed about the latest changes and improvements to the project. Below you'll find a summary of recent updates:
+
 > ### 08/07/2024
 > 
 > **Added Files:**
