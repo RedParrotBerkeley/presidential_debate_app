@@ -119,10 +119,10 @@ To run this project locally:
 > Ease of testing different models. As of today, `gpt-4o-mini` seems to be the best with responses.
   
 
+## 📜 License
 
-## License
+This project is licensed under the **Testing Purposes License**. For more details, please see the [LICENSE](./LICENSE) file.
 
-This project is licensed under the Testing Purposes License - see the [LICENSE] file for details.
 
 ## 📚 Text Data Sources
 
