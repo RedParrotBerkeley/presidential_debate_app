@@ -10,7 +10,7 @@ The **Presidential Debate Simulator** is an interactive web application designed
 
 - **Interactive Debate**: Ask questions and receive responses from Candidate A and Candidate B.
 - **Voting System**: Vote for the best response and see the overall results.
-~~- **Trivia Section**: Test your knowledge with trivia questions about US Presidents.~~
+~~- -**Trivia Section**: Test your knowledge with trivia questions about US Presidents.~~
 - **Earn Badges**: Earn badges for participation and correct answers in the trivia section.
 
 ---
