@@ -124,24 +124,39 @@ To run this project locally:
 
 This project is licensed under the Testing Purposes License - see the [LICENSE] file for details.
 
-## text data source
-1. Trump
-https://docs.google.com/document/d/12vgqTrVF0JSSBvXW6xwxdUVT9w36WXVVYiTvjRKfRzw/edit
+## 📚 Text Data Sources
 
-2. Harris
-https://docs.google.com/document/d/1-m0UCzJ7CY_NwdJid91wIa0JwDxwfkBYnpSS6FDiHAg/edit
+Here are the key documents and speeches used as text data sources for our project. Each link provides access to publicly available content for analysis.
 
-3. Governers
-https://docs.google.com/document/d/16OO5ZqDZtAyE6GW79tesC7MaJ5z5jiVP2HwZ7Fu4VyI/edit
+### 🗣️ Speeches and Public Statements
 
-4. Steve Garvey
-https://docs.google.com/document/d/16RuK5aP-nP5hRO_TT7V9IV14zJStBbt_6cqh84_C--I/edit
+> **Donald Trump**  
+> [📄 View Document](https://docs.google.com/document/d/12vgqTrVF0JSSBvXW6xwxdUVT9w36WXVVYiTvjRKfRzw/edit)  
+> *A collection of speeches and public statements made by Donald Trump.*
 
-5. Adam Schiff
-https://docs.google.com/document/d/16TBYK2v3isS1D8b_RjTntDKzZKMZ8d2TmDlX_oFQs7M/edit
+> **Kamala Harris**  
+> [📄 View Document](https://docs.google.com/document/d/1-m0UCzJ7CY_NwdJid91wIa0JwDxwfkBYnpSS6FDiHAg/edit)  
+> *Key speeches and public addresses by Vice President Kamala Harris.*
 
-6. Ted Cruz
-https://docs.google.com/document/d/16gHSkshQ2EwIAF-XKYd5AlSoN5Sor-5aOQucSlW2Msw/edit
+### 🏛️ Political Figures
 
-7. Colin Allred
-https://docs.google.com/document/d/16cnauFJRgS2Wpp5RnTaieCUAr3aki063SZFX0cAuMVY/edit
+> **Governors' Statements**  
+> [📄 View Document](https://docs.google.com/document/d/16OO5ZqDZtAyE6GW79tesC7MaJ5z5jiVP2HwZ7Fu4VyI/edit)  
+> *Statements and announcements from various U.S. governors.*
+
+> **Steve Garvey**  
+> [📄 View Document](https://docs.google.com/document/d/16RuK5aP-nP5hRO_TT7V9IV14zJStBbt_6cqh84_C--I/edit)  
+> *Public statements and interviews with Steve Garvey.*
+
+> **Adam Schiff**  
+> [📄 View Document](https://docs.google.com/document/d/16TBYK2v3isS1D8b_RjTntDKzZKMZ8d2TmDlX_oFQs7M/edit)  
+> *Speeches and public comments from Representative Adam Schiff.*
+
+> **Ted Cruz**  
+> [📄 View Document](https://docs.google.com/document/d/16gHSkshQ2EwIAF-XKYd5AlSoN5Sor-5aOQucSlW2Msw/edit)  
+> *Public addresses and policy statements from Senator Ted Cruz.*
+
+> **Colin Allred**  
+> [📄 View Document](https://docs.google.com/document/d/16cnauFJRgS2Wpp5RnTaieCUAr3aki063SZFX0cAuMVY/edit)  
+> *Key speeches and positions articulated by Representative Colin Allred.*
+
