@@ -82,7 +82,7 @@ To run this project locally:
 
 
 ## Updates
-<u>**08/07/2024**</u>  
+### <u>**08/07/2024**</u>  
 
 Added Files:  
 * main.py : this file includes functions from rag_debate.py - Use rag_debate.py to run inside notebook. main.py requires server.  
@@ -96,7 +96,7 @@ Key Features:
 * Includes the QueryRequest Pydantic model for request validation.  
 * Sets up a startup event to preprocess and vectorize data.  
 * Defines the /query endpoint to handle user queries and generate responses.  
-* Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.  
+* Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.  ###
 
 <u>**08/13/2024**</u>  
 
