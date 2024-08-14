@@ -98,17 +98,21 @@ Key Features:
 * Defines the /query endpoint to handle user queries and generate responses.  
 * Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.  ###
 
-<u>**08/13/2024**</u>  
-
-Added Files:  
-* requirements.txt  
-
-Update:  
-* RAG Debate.py   
-* Add - main = 'insert model of choice'
-
-Purpose:  
-* Ease of testing different models. As of today, gpt-4o-mini seems to be the best with responses.   
+> ### 08/13/2024
+> 
+> **Added Files:**
+> 
+> - `requirements.txt`
+> 
+> **Update:**
+> 
+> - `RAG Debate.py`
+>   - Add - `main = 'insert model of choice'`
+> 
+> **Purpose:**
+> 
+> Ease of testing different models. As of today, `gpt-4o-mini` seems to be the best with responses.
+  
 
 
 ## License
