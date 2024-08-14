@@ -82,27 +82,27 @@ To run this project locally:
 
 
 ## Updates
-### Date of Update - 08/07/2024
-Added Files
-main.py : this file includes functions from rag_debate.py - Use rag_debate.py to run inside notebook. main.py requires server.
+08/07/2024
+-Added Files
+-main.py : this file includes functions from rag_debate.py - Use rag_debate.py to run inside notebook. main.py requires server.
 
-Purpose: Contains the main FastAPI application.
-Key Features:
-Defines the FastAPI app instance.
-Implements utility functions for text processing.
-Includes the QueryRequest Pydantic model for request validation.
-Sets up a startup event to preprocess and vectorize data.
-Defines the /query endpoint to handle user queries and generate responses.
-Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.
+-Purpose: Contains the main FastAPI application.
+-Key Features:
+-Defines the FastAPI app instance.
+-Implements utility functions for text processing.
+-Includes the QueryRequest Pydantic model for request validation.
+-Sets up a startup event to preprocess and vectorize data.
+-Defines the /query endpoint to handle user queries and generate responses.
+-Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.
 
-### Date of Update - 08/13/2024
-Added Files
-requirements.txt
+08/13/2024
+-Added Files
+-requirements.txt
 
 Update
-RAG Debate.py 
-Add - main = 'insert model of choice' 
-Purpose - Ease of testing different models. As of today, gpt-4o-mini seems to be the best with responses. 
+-RAG Debate.py 
+-Add - main = 'insert model of choice' 
+-Purpose - Ease of testing different models. As of today, gpt-4o-mini seems to be the best with responses. 
 
 
 ## License
