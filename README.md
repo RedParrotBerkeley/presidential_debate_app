@@ -105,7 +105,7 @@ Added Files
 
 Update  
 * RAG Debate.py   
-* Add - main = 'insert model of choice'   
+* Add - main = 'insert model of choice'
 Purpose  
 * Ease of testing different models. As of today, gpt-4o-mini seems to be the best with responses.   
 
