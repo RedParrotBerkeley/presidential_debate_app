@@ -1,5 +1,5 @@
 
-# 🎙️ Presidential Debate Simulator
+# 🎙️ Political Debate Simulator
 ## 🏆 Winner of the 2024 Code the Vote Hackathon
 
 The **Presidential Debate Simulator** is an interactive web application designed to simulate a debate between two presidential candidates. Users can ask questions, read the candidates' responses, vote on the best answers, and test their knowledge with trivia questions about US Presidents.
