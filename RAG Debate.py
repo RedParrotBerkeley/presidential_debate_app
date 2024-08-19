@@ -4,6 +4,7 @@ import re
 import pickle
 import csv
 import numpy as np
+import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
@@ -48,14 +49,8 @@ def select_from_database(sql_string):
     cursor = connection.cursor()
     cursor.execute(sql_string)
     records = cursor.fetchall()
-    print("Total number of rows: ", cursor.rowcount)
-
-    print("\nPrinting each row")
-    for row in records:
-        print(row, "\n")
-
     connection.close()
-
+    return records
 
 # Function to estimate the token length of text
 def estimate_tokens(text, model_name=model):
@@ -109,6 +104,13 @@ def save_to_csv(data, filename='chatbot_data.tsv'):
             writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename'])  # Proper headers
         writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
 
+def save_to_db_response(data):
+    #TODO make this insert work when constrained foreign key values are set up
+    contexts = json.dumps(best_retrieved_texts)
+    filenames = json.dumps(best_filenames)
+    vals = (query_id, 0, best_response, contexts, filenames, 0, 0, 0) #TODO fill in missing fields
+    insert_into_database(f"INSERT INTO Response (queryId, candidateId, response, contexts, filenames, userVoted, contextRelevanceScore, faithfulnessScore) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", vals)
+
 def truncate_text_to_fit(text, max_tokens):
     encoding = tiktoken.encoding_for_model(model)
     tokens = encoding.encode(text)
@@ -128,10 +130,13 @@ def chatbot_with_prevectorized_chunks(api_key, min_similarity=.15):
             break
         vals = (session_id, query, datetime.now())
         insert_into_database(f"INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
-        
+        #TODO move the insert statement to the front end
+
         best_retrieved_texts = []
         best_filenames = []
 
+        query_id, query = select_from_database("SELECT id, query FROM Query ORDER BY id LIMIT 1")[0]
+        
         for vectorizer, vectors, chunk, filenames in vectorized_chunks:
             query_vec = vectorizer.transform([query])
             similarities = cosine_similarity(query_vec, vectors).flatten()
