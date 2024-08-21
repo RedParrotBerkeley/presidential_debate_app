@@ -123,7 +123,47 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > **Purpose:**
 > 
 > Ease of testing different models. As of today, `gpt-4o-mini` seems to be the best with responses.
-  
+
+---
+
+> ### 08/21/2024
+>
+> **Renamed Files:**
+>
+> - `RAG Debate.py to TFID RAG Debate.py`
+> - `process_sources.py to TFID_process_sources.py` Both changed to differentiate between TFID Vectorization and OpenAPI
+>   
+> **Added Files:**
+> 
+> - `OpenAPI RAG Debate.py`
+> - `OpenAPI_process_sources.py`
+> - `generated_client.zip`
+> - `openai-api.yaml` - OpenAPI Spec File
+> 
+> **Purpose:**
+> 
+> To attempt using better vectorization via OpenAPI.
+> 
+> **Key Features:**
+> 
+> - API Client Configuration - Structured to interact with OpenAI's API, two specific models: `text-embedding-ada-002` for generating embeddings and `gpt-4o-mini` for generating chat completions. It sets up an API client using configuration classes and authorizes requests with an API key.
+> - Text Preprocessing and Chunking - It includes functions for extracting, preprocessing, and chunking text data from .txt files, enabling efficient handling of large documents by breaking them into smaller, manageable pieces based on token length.
+> - OpenAI Embedding Generation - The code provides a function to generate text embeddings using the `text-embedding-ada-002` model. These embeddings are crucial for comparing the similarity of different text chunks
+> 
+> **Requirements:**
+>
+> - JDK Development Kit 22.0.2 - https://www.oracle.com/java/technologies/downloads/?er=221886
+> 1. In the Environment Variables window, under the System variables section, click New....
+> 2. In the Variable name field, enter JAVA_HOME.
+> 3. In the Variable value field, enter the path to your JDK installation directory. This will be something like: `C:\Program Files\Java\jdk-22.0.2`
+> 4. Add the BIN to environment variables (path)
+>
+> - ONLY TO GENERATE NEW CLIENT - OpenAPI-generator -  https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.7.0/openapi-generator-cli-7.7.0.jar - ONLY TO GENERATE NEW CLIENT - 
+> 1. Ensure OpenAPI Spec File `openai-api.yaml` is located somewhere
+> 2. Run the following - `java -jar C:\openapi-generator-cli.jar generate -i 'PATH TO "openai-api.yaml"' -g python -o ./generated-client`
+> 3. You can install the generated client into your Python environment by navigating to the generated-client directory and running: `pip install .`
+> 4. By default, the generated-client folder is created in the current working directory from which you run the OpenAPI Generator command.
+>   
 
 ## 📜 License
 
