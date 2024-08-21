@@ -1,0 +1,117 @@
+openapi: 3.0.0
+info:
+  title: Custom OpenAI API Spec
+  description: This OpenAPI specification describes the API endpoints used in the provided Python code.
+  version: 1.0.0
+
+servers:
+  - url: https://api.openai.com/v1
+
+paths:
+  /chat/completions:
+    post:
+      summary: Generate a chat completion using OpenAI GPT-4 model.
+      operationId: generateChatCompletion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  example: gpt-4
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        example: system
+                      content:
+                        type: string
+                        example: "You are a helpful assistant."
+                max_tokens:
+                  type: integer
+                  example: 4096
+                temperature:
+                  type: number
+                  format: float
+                  example: 0.1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                    example: chat.completion
+                  created:
+                    type: integer
+                  model:
+                    type: string
+                  choices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message:
+                          type: object
+                          properties:
+                            role:
+                              type: string
+                            content:
+                              type: string
+                        finish_reason:
+                          type: string
+                          example: stop
+
+  /embeddings:
+    post:
+      summary: Generate embeddings using the OpenAI API.
+      operationId: generateEmbeddings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - "The quick brown fox jumps over the lazy dog."
+                model:
+                  type: string
+                  example: text-embedding-ada-002
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        embedding:
+                          type: array
+                          items:
+                            type: number
+                            format: float
+                          example: [0.0023, 0.0098, 0.0439, ...]
+                        index:
+                          type: integer
+                          example: 0
