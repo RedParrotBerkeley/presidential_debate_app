@@ -5,30 +5,18 @@ import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
-from openapi_client.api.default_api import DefaultApi  # Import the API client
-from openapi_client.models.generate_embeddings_request import GenerateEmbeddingsRequest  # Import the request model
-from openapi_client.configuration import Configuration  # Import the configuration class
-from openapi_client.api_client import ApiClient  # Import the ApiClient class
-
-# Add API on lines 16 and 77 
+from openai import OpenAI
+from dotenv import load_dotenv
 
 # Set your OpenAI API key
-api_key = os.getenv('OPENAI_API_KEY', 'INSERT API')  
+load_dotenv()
+# api_key = os.getenv('OPENAI_API_KEY', 'INSERT API')  
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Model to use for embeddings
-model = 'text-embedding-ada-002'
+model = "text-embedding-3-small"
 
-# Configure API client with the API key in the headers
-configuration = Configuration()
-configuration.api_key_prefix['Authorization'] = 'Bearer'
-configuration.api_key['Authorization'] = api_key
-
-# Initialize the API client with the configuration
-api_client = ApiClient(configuration=configuration)
-
-# Initialize the DefaultApi client
-client = DefaultApi(api_client=api_client)
-
+client = OpenAI()
 print("API client initialized successfully.")
 
 # Function to extract text from a .txt file
@@ -69,20 +57,10 @@ def chunk_paragraphs(paragraphs, filenames, chunk_size=2000, model_name=model):
     
     return chunked_paragraphs
 
-# Function to get OpenAI embeddings using the new API
-def get_openai_embedding(text):
-    try:
-        request_body = GenerateEmbeddingsRequest(input=[text], model=model)
-        headers = {
-            "Authorization": f"Bearer {'INSERT API'}" 
-        }
-        response = client.generate_embeddings(request_body, _headers=headers)  # Pass the headers with the request
-        # Access the embedding from the response object
-        print(f"Embedding generated successfully for text: {text[:30]}...")  # Print a snippet of the text
-        return response.data[0].embedding
-    except Exception as e:
-        print(f"Error generating embeddings: {e}")
-        return None
+
+def get_openai_embedding(text, model=model):
+   text = text.replace("\n", " ")
+   return client.embeddings.create(input = [text], model=model).data[0].embedding
 
 # Function to preprocess, chunk, and vectorize using OpenAI embeddings
 def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name=model):
@@ -115,7 +93,7 @@ def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name=m
 
 def main():
     folder_path = 'Downloads/archive/'
-    preprocess_and_vectorize_combined(folder_path, chunk_size=1000)
+    preprocess_and_vectorize_combined(folder_path, chunk_size=300)
     print("Process completed successfully.")
 
 if __name__ == "__main__":
