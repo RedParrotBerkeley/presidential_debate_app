@@ -106,6 +106,23 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > - Sets up a startup event to preprocess and vectorize data.
 > - Defines the `/query` endpoint to handle user queries and generate responses.
 > - Uses OpenAI's GPT-4 model to generate responses based on retrieved text chunks.
+---
+
+> ### 08/11/2024
+> 
+> **Added Files:**
+> 
+> - `process_sources.py`: makes the chunks and vectorizes them and saves them into a pickle file. Also adjusted the chunking to enforce the chunks to stay within the set size
+> 
+> **Update:**
+> 
+> - `RAG Debate.py`
+>   - remove the parts about processing the source files into vectors. This file is now only the user input and response generation
+> 
+> **Purpose:**
+> 
+> separates the vectorizing and chunking process to its own script so it could run apart from the game, which saves resources not reprocessing the files each game, and makes run time faster.
+> Making the chunking enforce a size limit makes each chunk more focused so it helps the context retrieve relevant information 
 
 ---
 
@@ -164,6 +181,18 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > 3. You can install the generated client into your Python environment by navigating to the generated-client directory and running: `pip install .`
 > 4. By default, the generated-client folder is created in the current working directory from which you run the OpenAPI Generator command.
 >   
+> ### 08/25/2024
+> 
+> **Update:**
+> 
+> - `TFID RAG Debate.py`
+>   - Add RAGAS faithfulness and answer_relevancy scores for each query response
+>   - Save the responses and scores to mysql
+> 
+> **Purpose:**
+> 
+>  The RAGAS scores are to keep a pulse on how good our chat bot answers are. These can be analyzed to help us improve the application.
+> 
 
 ## 📜 License
 
