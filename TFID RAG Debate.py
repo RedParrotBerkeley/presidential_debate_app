@@ -11,7 +11,9 @@ import tiktoken  # OpenAI's tokenizer
 import mysql.connector
 from dotenv import load_dotenv
 from datetime import datetime
-
+from datasets import Dataset 
+from ragas.metrics import faithfulness, answer_relevancy
+from ragas import evaluate
 
 #insert desired model 
 model = 'gpt-4o-mini'
@@ -24,6 +26,32 @@ MYSQL_HOST = os.getenv('MYSQL_HOST')
 MYSQL_PORT = os.getenv('MYSQL_PORT')
 MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+
+def get_scoring_metrics(query, response, contexts):
+    """
+    This is an example of Google style.
+
+    Args:
+        param1: This is the first param.
+        param2: This is a second param.
+
+    Returns:
+        This is a description of what is returned.
+
+    Raises:
+        KeyError: Raises an exception.
+    """
+    data = {
+        'question': [query],
+        'answer': [response],
+        'contexts' : [contexts]
+        }
+    dataset = Dataset.from_dict(data)
+    score = evaluate(dataset,metrics=[faithfulness, answer_relevancy])
+    score.to_pandas()
+    return score
+
 
 # Function to create a database connection and run a query
 def insert_into_database(sql_string, vals):
@@ -114,11 +142,10 @@ def save_to_csv(data, filename='chatbot_data.tsv'):
         writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filenames']])
 
 def save_to_db(data):
-    #TODO make this insert work when constrained foreign key values are set up
     contexts = json.dumps(data['retrieved_text'])
     filenames = json.dumps(data['filenames'])
-    vals = (data['query_id'], 1, data['response'], contexts, filenames, 0, 0, 0) #TODO fill in missing fields
-    insert_into_database(f"INSERT INTO Response (queryId, candidateId, response, contexts, filenames, userVoted, contextRelevanceScore, faithfulnessScore) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", vals)
+    vals = (data['query_id'], 1, data['response'], contexts, filenames, 0, float(data['answer_relevancy']), float(data['faithfulness'])) #TODO fill in candidate and vote
+    insert_into_database(f"INSERT INTO Response (queryId, candidateId, response, contexts, filenames, userVoted, answerRelevancyScore, faithfulnessScore) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", vals)
 
 def truncate_text_to_fit(text, max_tokens):
     encoding = tiktoken.encoding_for_model(model)
@@ -145,7 +172,7 @@ def chatbot_with_prevectorized_chunks(api_key, min_similarity=.15):
         best_filenames = []
 
         query_id, query = get_last_query_from_db()
-        
+
         for vectorizer, vectors, chunk, filenames in vectorized_chunks:
             query_vec = vectorizer.transform([query])
             similarities = cosine_similarity(query_vec, vectors).flatten()
@@ -163,12 +190,15 @@ def chatbot_with_prevectorized_chunks(api_key, min_similarity=.15):
             best_filenames = 'N/A'
 
         if best_response:
+            scores = get_scoring_metrics(query, best_response, best_retrieved_texts)
             data = {
                 'query': query,
                 'query_id': query_id,
                 'retrieved_text': best_retrieved_texts,
                 'response': best_response,
-                'filenames': best_filenames
+                'filenames': best_filenames,
+                'faithfulness': scores['faithfulness'],
+                'answer_relevancy': scores['answer_relevancy']
             }
             save_to_csv(data)
             save_to_db(data)
@@ -188,7 +218,7 @@ def main():
                               host=MYSQL_HOST,
                               port=MYSQL_PORT,
                               database=MYSQL_DATABASE)
-    chatbot_with_prevectorized_chunks(api_key, min_similarity=.17)
+    chatbot_with_prevectorized_chunks(api_key, min_similarity=.2)
 
 if __name__ == "__main__":
     main()
