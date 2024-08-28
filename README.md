@@ -192,7 +192,19 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > **Purpose:**
 > 
 >  The RAGAS scores are to keep a pulse on how good our chat bot answers are. These can be analyzed to help us improve the application.
+>   
+> ### 08/27/2024
 > 
+> **Added Files:**
+> 
+> - `suggested_questions.txt`
+>   - Add sample questions into text file
+> 
+> **Purpose:**
+> 
+>  The sample questions will be the ones suggested to the users in the game. They will also be the baseline questions for which we will create a test set and validate that we have the right answers
+> 
+
 
 ## 📜 License
 
