@@ -204,6 +204,24 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > 
 >  The sample questions will be the ones suggested to the users in the game. They will also be the baseline questions for which we will create a test set and validate that we have the right answers
 > 
+> ### 08/28/2024
+> 
+> **Added Files:**
+> 
+> - `debate_bot.py`
+>   - The new main file of the chatbot. This combines what was `openapi_RAG Debate.py` with the updates to pull queries from and save responses to the mysql database.
+>   - This also has a fix for retrieving bad texts by switching the "ascending" parameter of the sort to True
+>
+> - `sources/reichert/Reichert_WA_Seattletimes_Jul07_2024.txt` 
+>   - start using document sources of our new candidates 
+>   - old sources were moved into archive
+> 
+> **Update:**
+> 
+> - `OpenAPI__process_sources.py`
+>   - folder path changed to use sources instead of archive
+>
+
 
 
 ## 📜 License
