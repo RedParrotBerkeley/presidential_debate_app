@@ -92,8 +92,10 @@ def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name=m
     print("Vectorized chunks saved successfully.")
 
 def main():
-    folder_path = 'Downloads/archive/'
-    preprocess_and_vectorize_combined(folder_path, chunk_size=300)
+    
+    folder_path = 'sources/reichert/'
+
+    preprocess_and_vectorize_combined(folder_path, chunk_size=500)
     print("Process completed successfully.")
 
 if __name__ == "__main__":

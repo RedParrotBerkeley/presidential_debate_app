@@ -2,23 +2,92 @@ import openai
 import os
 import pickle
 import csv
+import json
 import numpy as np
 from scipy.spatial.distance import cosine
 import tiktoken  # OpenAI's tokenizer
 from openai import OpenAI
 import pandas as pd
 from dotenv import load_dotenv
+import mysql.connector
+from datetime import datetime
+from datasets import Dataset 
+from ragas.metrics import faithfulness, answer_relevancy
+from ragas import evaluate
 
-# Set your OpenAI API key
-# api_key = os.getenv('OPENAI_API_KEY', 'INSERT API')  
-load_dotenv()
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Model to use for chat completions
 model = 'gpt-4o-mini'
 
-client = OpenAI()
-print("API client initialized successfully.")
+#load envrionment variables
+load_dotenv()
+MYSQL_USER = os.getenv('MYSQL_USER')
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
+MYSQL_HOST = os.getenv('MYSQL_HOST')
+MYSQL_PORT = os.getenv('MYSQL_PORT')
+MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+def get_scoring_metrics(query, response, contexts):
+    """
+    This is an example of Google style.
+
+    Args:
+        param1: This is the first param.
+        param2: This is a second param.
+
+    Returns:
+        This is a description of what is returned.
+
+    Raises:
+        KeyError: Raises an exception.
+    """
+    data = {
+        'question': [query],
+        'answer': [response],
+        'contexts' : [contexts]
+        }
+    dataset = Dataset.from_dict(data)
+    score = evaluate(dataset,metrics=[faithfulness, answer_relevancy])
+    score.to_pandas()
+    return score
+
+
+# Function to create a database connection and run a query
+def insert_into_database(sql_string, vals):
+    print(sql_string)
+    connection = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                port=MYSQL_PORT,
+                                database=MYSQL_DATABASE)
+
+    cursor = connection.cursor()
+    cursor.execute(sql_string, vals)
+    connection.commit()
+
+    print(cursor.rowcount, "record inserted.")
+    connection.close()
+
+def select_from_database(sql_string):
+    connection = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                port=MYSQL_PORT,
+                                database=MYSQL_DATABASE)
+
+    cursor = connection.cursor()
+    cursor.execute(sql_string)
+    records = cursor.fetchall()
+    connection.close()
+    return records
+
+def get_last_query_from_db():
+    rows = select_from_database("SELECT id, query FROM Query ORDER BY id desc LIMIT 1")
+    print("rows:", rows)
+    query_id = rows[0][0]
+    print(query_id)
+    query = rows[0][1]
+    print(query)
+    return (query_id, query)
 
 # Function to estimate the token length of text
 def estimate_tokens(text, model_name=model):
@@ -71,7 +140,13 @@ def save_to_csv(data, filename='chatbot_data.tsv'):
         writer = csv.writer(file, delimiter='\t')  # Use tab as the delimiter
         if not file_exists:
             writer.writerow(['Query', 'Retrieved Text', 'Response', 'Filename'])  # Proper headers
-        writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filename']])
+        writer.writerow([data['query'], data['retrieved_text'], data['response'], data['filenames']])
+
+def save_to_db(data):
+    contexts = json.dumps(data['retrieved_text'])
+    filenames = json.dumps(data['filenames'])
+    vals = (data['query_id'], 1, data['response'], contexts, filenames, 0, float(data['answer_relevancy']), float(data['faithfulness'])) #TODO fill in candidate and vote
+    insert_into_database(f"INSERT INTO Response (queryId, candidateId, response, contexts, filenames, userVoted, answerRelevancyScore, faithfulnessScore) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", vals)
 
 def truncate_text_to_fit(text, max_tokens):
     encoding = tiktoken.encoding_for_model(model)
@@ -84,8 +159,8 @@ def truncate_text_to_fit(text, max_tokens):
    
 def get_openai_embedding(text, model="text-embedding-3-small"):
     
+    client = OpenAI()
     try:
-        print("trying to embed ", text)
         text = text.replace("\n", " ")
         return client.embeddings.create(input = [text], model=model).data[0].embedding
         
@@ -115,7 +190,7 @@ def find_best_texts(query_embedding, n):
             'similarities': best_similarities
             })
             
-        result = text_similarities.sort_values('similarities', ascending=False)
+        result = text_similarities.sort_values('similarities', ascending=True)
         print(result.head())
         file.close()
         return result.head(n)
@@ -123,10 +198,17 @@ def find_best_texts(query_embedding, n):
 # Chatbot function
 def chatbot_with_prevectorized_chunks():
     
+    session_id = 0 #TODO replace this with real session
+
     while True:
         query = input("You: ")
         if query.lower() in ['exit', 'quit']:
             break
+
+        vals = (session_id, query, datetime.now())
+        insert_into_database(f"INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
+        
+        query_id, query = get_last_query_from_db()
 
         # Get the embedding for the user's query
         query_embedding = get_openai_embedding(query)
@@ -145,18 +227,31 @@ def chatbot_with_prevectorized_chunks():
             best_filenames = 'N/A'
 
         if best_response:
+            scores = get_scoring_metrics(query, best_response, best_retrieved_texts)
             data = {
                 'query': query,
+                'query_id': query_id,
                 'retrieved_text': best_retrieved_texts,
                 'response': best_response,
-                'filename': best_filenames
+                'filenames': best_filenames,
+                'faithfulness': scores['faithfulness'],
+                'answer_relevancy': scores['answer_relevancy']
             }
             save_to_csv(data)
+            save_to_db(data)
 
         print(f"Response: {best_response}")
 
 # Main function
 def main():
+
+    api_key = OPENAI_API_KEY
+    
+    connection = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                              host=MYSQL_HOST,
+                              port=MYSQL_PORT,
+                              database=MYSQL_DATABASE)
+
     chatbot_with_prevectorized_chunks()
 
 if __name__ == "__main__":
