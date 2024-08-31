@@ -6,7 +6,6 @@ import json
 import numpy as np
 from scipy.spatial.distance import cosine
 import tiktoken  # OpenAI's tokenizer
-from openai import OpenAI
 import pandas as pd
 from dotenv import load_dotenv
 import mysql.connector
@@ -14,7 +13,6 @@ from datetime import datetime
 from datasets import Dataset 
 from ragas.metrics import faithfulness, answer_relevancy
 from ragas import evaluate
-
 
 # Model to use for chat completions
 model = 'gpt-4o-mini'
@@ -27,6 +25,8 @@ MYSQL_HOST = os.getenv('MYSQL_HOST')
 MYSQL_PORT = os.getenv('MYSQL_PORT')
 MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+openai.api_key = OPENAI_API_KEY
 
 def get_scoring_metrics(query, response, contexts):
     """
@@ -52,28 +52,27 @@ def get_scoring_metrics(query, response, contexts):
     score.to_pandas()
     return score
 
+def get_database_connection():
+    return mysql.connector.connect(
+        user=MYSQL_USER,
+        password=MYSQL_PASSWORD,
+        host=MYSQL_HOST,
+        port=MYSQL_PORT,
+        database=MYSQL_DATABASE
+    )
 
 # Function to create a database connection and run a query
 def insert_into_database(sql_string, vals):
     print(sql_string)
-    connection = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                host=MYSQL_HOST,
-                                port=MYSQL_PORT,
-                                database=MYSQL_DATABASE)
-
+    connection = get_database_connection()
     cursor = connection.cursor()
     cursor.execute(sql_string, vals)
     connection.commit()
-
     print(cursor.rowcount, "record inserted.")
     connection.close()
 
 def select_from_database(sql_string):
-    connection = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                host=MYSQL_HOST,
-                                port=MYSQL_PORT,
-                                database=MYSQL_DATABASE)
-
+    connection = get_database_connection()
     cursor = connection.cursor()
     cursor.execute(sql_string)
     records = cursor.fetchall()
@@ -90,14 +89,12 @@ def get_last_query_from_db():
     return (query_id, query)
 
 # Function to estimate the token length of text
-def estimate_tokens(text, model_name=model):
-    encoding = tiktoken.encoding_for_model(model_name)
+def estimate_tokens(text):
+    encoding = tiktoken.encoding_for_model(model)
     return len(encoding.encode(text))
 
 # Function to generate a response using the ChatGPT model
 def generate_response(query, retrieved_texts, max_tokens=4096):
-    
-    client = openai.OpenAI()
 
     context = ', '.join(retrieved_texts)
 
@@ -158,8 +155,6 @@ def truncate_text_to_fit(text, max_tokens):
 
    
 def get_openai_embedding(text, model="text-embedding-3-small"):
-    
-    client = OpenAI()
     try:
         text = text.replace("\n", " ")
         return client.embeddings.create(input = [text], model=model).data[0].embedding
@@ -172,7 +167,7 @@ def get_openai_embedding(text, model="text-embedding-3-small"):
 def find_best_texts(query_embedding, n):
     with open('vectorized_chunks.pkl', 'rb') as file:
         vectorized_chunks = pickle.load(file)
-
+       
         best_retrieved_texts = []
         best_filenames = []
         best_similarities = []
@@ -192,7 +187,6 @@ def find_best_texts(query_embedding, n):
             
         result = text_similarities.sort_values('similarities', ascending=True)
         print(result.head())
-        file.close()
         return result.head(n)
 
 # Chatbot function
@@ -244,13 +238,6 @@ def chatbot_with_prevectorized_chunks():
 
 # Main function
 def main():
-
-    api_key = OPENAI_API_KEY
-    
-    connection = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                              host=MYSQL_HOST,
-                              port=MYSQL_PORT,
-                              database=MYSQL_DATABASE)
 
     chatbot_with_prevectorized_chunks()
 
