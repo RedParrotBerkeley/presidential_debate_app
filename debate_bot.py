@@ -112,7 +112,7 @@ def generate_response(query, retrieved_texts, max_tokens=4096):
         prompt = f"Context: {truncated_retrieved_text}\n\nQuestion: {query}\n\nAnswer:"
     
     try:
-        response = client.chat.completions.create(
+        response = openai.chat.completions.create(
                 model= model,
                 messages=[
                     system_message,
@@ -157,7 +157,7 @@ def truncate_text_to_fit(text, max_tokens):
 def get_openai_embedding(text, model="text-embedding-3-small"):
     try:
         text = text.replace("\n", " ")
-        return client.embeddings.create(input = [text], model=model).data[0].embedding
+        return openai.embeddings.create(input = [text], model=model).data[0].embedding
         
     except Exception as e:
         print(f"Error generating embeddings: {e}")
@@ -191,7 +191,7 @@ def find_best_texts(query_embedding, filenames, n):
         }
     )
 
-    result = text_similarities.sort_values('similarities', ascending=False)
+    result = text_similarities.sort_values('similarities', ascending=True)
 
     # Print the top results for debugging
     print(result.head())

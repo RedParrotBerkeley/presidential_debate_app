@@ -59,8 +59,8 @@ def chunk_paragraphs(paragraphs, filenames, chunk_size=2000, model_name=model):
     return chunked_paragraphs
 
 def get_openai_embedding(text, model=model):
-   text = text.replace("\n", " ")
-   return client.embeddings.create(input = [text], model=model).data[0].embedding
+    text = text.replace("\n", " ")
+    return openai.embeddings.create(input = [text], model=model).data[0].embedding
     
 # Function to preprocess, chunk, and vectorize using OpenAI embeddings
 def preprocess_and_vectorize_combined(folder_path, output_filename, chunk_size=2000, model_name=model):
