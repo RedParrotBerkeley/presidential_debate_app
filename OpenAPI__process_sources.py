@@ -5,18 +5,19 @@ import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
-from openai import OpenAI
 from dotenv import load_dotenv
 
-# Set your OpenAI API key
+# Load environment variables
 load_dotenv()
-# api_key = os.getenv('OPENAI_API_KEY', 'INSERT API')  
+
+# Set your OpenAI API key
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Model to use for embeddings
 model = "text-embedding-3-small"
 
-client = OpenAI()
+# Initialize OpenAI client (Note: OpenAI does not have a 'client' object; it's directly openai. Remove if unused)
+openai.api_key = OPENAI_API_KEY
 print("API client initialized successfully.")
 
 # Function to extract text from a .txt file
@@ -57,13 +58,12 @@ def chunk_paragraphs(paragraphs, filenames, chunk_size=2000, model_name=model):
     
     return chunked_paragraphs
 
-
 def get_openai_embedding(text, model=model):
-   text = text.replace("\n", " ")
-   return client.embeddings.create(input = [text], model=model).data[0].embedding
-
+    text = text.replace("\n", " ")
+    return openai.embeddings.create(input = [text], model=model).data[0].embedding
+    
 # Function to preprocess, chunk, and vectorize using OpenAI embeddings
-def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name=model):
+def preprocess_and_vectorize_combined(folder_path, output_filename, chunk_size=2000, model_name=model):
     all_texts = []
     all_filenames = []
 
@@ -74,7 +74,7 @@ def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name=m
             all_texts.extend(raw_paragraphs)
             all_filenames.extend([filename] * len(raw_paragraphs))
 
-    print(f"Extracted and preprocessed text from {len(all_filenames)} files.")
+    print(f"Extracted and preprocessed text from {len(all_filenames)} files in {folder_path}.")
 
     processed_paragraphs = preprocess_paragraphs(all_texts)
     chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, chunk_size, model_name)
@@ -87,16 +87,23 @@ def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name=m
                 vectorized_chunks.append((embedding, chunk, filenames))
                 print(f"Vectorized chunk from file {filenames[0]}.")
 
-    with open('vectorized_chunks.pkl', 'wb+') as file:
+    with open(output_filename, 'wb+') as file:
         pickle.dump(vectorized_chunks, file)
-    print("Vectorized chunks saved successfully.")
+    print(f"Vectorized chunks saved to {output_filename} successfully.")
 
 def main():
+    # Define folders and output filenames
+    folder_paths = {
+        'reichert': 'sources/reichert/',
+        'ferguson': 'sources/ferguson/'
+    }
     
-    folder_path = 'sources/reichert/'
-
-    preprocess_and_vectorize_combined(folder_path, chunk_size=500)
-    print("Process completed successfully.")
+    # Process both folders
+    for candidate, folder_path in folder_paths.items():
+        output_filename = f'vectorized_chunks_{candidate}.pkl'
+        preprocess_and_vectorize_combined(folder_path, output_filename, chunk_size=500)
+    
+    print("Process completed successfully for both candidates.")
 
 if __name__ == "__main__":
     main()

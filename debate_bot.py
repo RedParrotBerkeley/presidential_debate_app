@@ -112,7 +112,7 @@ def generate_response(query, retrieved_texts, max_tokens=4096):
         prompt = f"Context: {truncated_retrieved_text}\n\nQuestion: {query}\n\nAnswer:"
     
     try:
-        response = client.chat.completions.create(
+        response = openai.chat.completions.create(
                 model= model,
                 messages=[
                     system_message,
@@ -157,42 +157,52 @@ def truncate_text_to_fit(text, max_tokens):
 def get_openai_embedding(text, model="text-embedding-3-small"):
     try:
         text = text.replace("\n", " ")
-        return client.embeddings.create(input = [text], model=model).data[0].embedding
+        return openai.embeddings.create(input = [text], model=model).data[0].embedding
         
     except Exception as e:
         print(f"Error generating embeddings: {e}")
         return None
         
 # Get the texts associated with the top n best similarity. Takes in a query embedding. Returns a dataframe
-def find_best_texts(query_embedding, n):
-    with open('vectorized_chunks.pkl', 'rb') as file:
-        vectorized_chunks = pickle.load(file)
-       
-        best_retrieved_texts = []
-        best_filenames = []
-        best_similarities = []
+def find_best_texts(query_embedding, filenames, n):
+    best_retrieved_texts = []
+    best_filenames = []
+    best_similarities = []
 
-        for embedding, chunk, filenames in vectorized_chunks:
-            similarity_score = cosine(query_embedding, embedding)
-            if similarity_score > 0:
-                best_similarities.append(similarity_score)
-                best_retrieved_texts.append(chunk[0]) 
-                best_filenames.append(filenames[0])
-        
-        text_similarities = pd.DataFrame(
-            {'texts': best_retrieved_texts,
+    # Process each file and retrieve texts
+    for filename in filenames:
+        with open(filename, 'rb') as file:
+            vectorized_chunks = pickle.load(file)
+
+            for embedding, chunk, chunk_filenames in vectorized_chunks:  # Use a different name for clarity
+                similarity_score = cosine(query_embedding, embedding)
+                # Only consider positive similarity scores
+                if similarity_score > 0:
+                    best_similarities.append(similarity_score)
+                    best_retrieved_texts.append(chunk[0])
+                    best_filenames.append(chunk_filenames[0])  # Use correct index if needed
+
+    # Combine results into a DataFrame and sort by similarity
+    text_similarities = pd.DataFrame(
+        {
+            'texts': best_retrieved_texts,
             'filenames': best_filenames,
             'similarities': best_similarities
-            })
-            
-        result = text_similarities.sort_values('similarities', ascending=True)
-        print(result.head())
-        return result.head(n)
+        }
+    )
+
+    result = text_similarities.sort_values('similarities', ascending=True)
+
+    # Print the top results for debugging
+    print(result.head())
+
+    # Return the top 'n' results
+    return result.head(n)
+
 
 # Chatbot function
 def chatbot_with_prevectorized_chunks():
-    
-    session_id = 0 #TODO replace this with real session
+    session_id = 0  # TODO replace this with real session
 
     while True:
         query = input("You: ")
@@ -210,31 +220,67 @@ def chatbot_with_prevectorized_chunks():
         if query_embedding is None:
             print("Failed to get query embedding. Try again.")
             continue
-        best_texts_df = find_best_texts(query_embedding, 4)
-        best_retrieved_texts = best_texts_df["texts"].tolist()
-        best_filenames = best_texts_df["filenames"].tolist()
+        
+        # Retrieve texts for Reichert
+        best_texts_df_reichert = find_best_texts(query_embedding, ['vectorized_chunks_reichert.pkl'], 4)  # Ensure correct filename
+        best_retrieved_texts_reichert = best_texts_df_reichert["texts"].tolist()
+        best_filenames_reichert = best_texts_df_reichert["filenames"].tolist()
 
-        if best_retrieved_texts:
-            best_response = generate_response(query, best_retrieved_texts)
+        # Generate a response for Reichert
+        if best_retrieved_texts_reichert:
+            best_response_reichert = generate_response(query, best_retrieved_texts_reichert)
         else:
-            best_response = "No suitable chunk found."
-            best_filenames = 'N/A'
+            best_response_reichert = "No suitable chunk found for Reichert."
+            best_filenames_reichert = 'N/A'
 
-        if best_response:
-            scores = get_scoring_metrics(query, best_response, best_retrieved_texts)
-            data = {
+        # Handle response and save data for Reichert
+        if best_response_reichert:
+            scores_reichert = get_scoring_metrics(query, best_response_reichert, best_retrieved_texts_reichert)
+            data_reichert = {
                 'query': query,
                 'query_id': query_id,
-                'retrieved_text': best_retrieved_texts,
-                'response': best_response,
-                'filenames': best_filenames,
-                'faithfulness': scores['faithfulness'],
-                'answer_relevancy': scores['answer_relevancy']
+                'retrieved_text': best_retrieved_texts_reichert,
+                'response': best_response_reichert,
+                'filenames': best_filenames_reichert,
+                'faithfulness': scores_reichert['faithfulness'],
+                'answer_relevancy': scores_reichert['answer_relevancy']
             }
-            save_to_csv(data)
-            save_to_db(data)
+            save_to_csv(data_reichert)
+            save_to_db(data_reichert)
 
-        print(f"Response: {best_response}")
+        # Print the response for Reichert
+        print(f"Response for Reichert: {best_response_reichert}")
+
+        # Retrieve texts for Ferguson
+        best_texts_df_ferguson = find_best_texts(query_embedding, ['vectorized_chunks_ferguson.pkl'], 4)  # Ensure correct filename
+        best_retrieved_texts_ferguson = best_texts_df_ferguson["texts"].tolist()
+        best_filenames_ferguson = best_texts_df_ferguson["filenames"].tolist()
+
+        # Generate a response for Ferguson
+        if best_retrieved_texts_ferguson:
+            best_response_ferguson = generate_response(query, best_retrieved_texts_ferguson)
+        else:
+            best_response_ferguson = "No suitable chunk found for Ferguson."
+            best_filenames_ferguson = 'N/A'
+
+        # Handle response and save data for Ferguson
+        if best_response_ferguson:
+            scores_ferguson = get_scoring_metrics(query, best_response_ferguson, best_retrieved_texts_ferguson)
+            data_ferguson = {
+                'query': query,
+                'query_id': query_id,
+                'retrieved_text': best_retrieved_texts_ferguson,
+                'response': best_response_ferguson,
+                'filenames': best_filenames_ferguson,
+                'faithfulness': scores_ferguson['faithfulness'],
+                'answer_relevancy': scores_ferguson['answer_relevancy']
+            }
+            save_to_csv(data_ferguson)
+            save_to_db(data_ferguson)
+
+        # Print the response for Ferguson
+        print(f"Response for Ferguson: {best_response_ferguson}")
+
 
 # Main function
 def main():
