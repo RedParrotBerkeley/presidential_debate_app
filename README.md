@@ -244,7 +244,34 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > - The code now generates responses and calculates metrics for each candidate independently, ensuring that the model's output is evaluated separately for Reichert and Ferguson.
 > - Utilized `ragas` metrics (faithfulness and answer_relevancy) to score and evaluate the generated responses, which are then saved to the database and CSV files for each query.
 >
-> - 
+---
+> ## 09/05/2024
+>
+>
+> #### 1. Added URL Extraction Functionality:
+> - Introduced the `extract_url_from_txt()` function to extract URLs from the top of `.txt` files.
+> - Validates if the first line is a valid URL and caches it for efficient access.
+> - Handles scenarios where the `.txt` file is missing or contains an invalid URL.
+>
+> #### 2. Updated `find_best_texts` Function:
+> - Modified to accept additional parameters: `pkl_filenames` and `txt_folder_path`.
+> - Added logic to extract and cache URLs from corresponding `.txt` files to avoid redundant reads.
+> - Returns a DataFrame that now includes URLs associated with each retrieved text chunk.
+>
+> #### 3. Enhanced Response Handling:
+> - Added logic to manage responses separately for each candidate (Reichert and Ferguson).
+> - Included source URLs in the print statements for better transparency of information sources.
+> - Introduced a conditional check: if the response contains "I do not have enough information," the source URL is set to `"None"`.
+>
+> #### 4. Improved Code Modularity and Error Handling:
+> - Removed hard-coded paths and added parameters to functions for better flexibility.
+> - Improved error handling for file operations and missing data, reducing potential crashes.
+> - Added informative print statements to provide better feedback during processing.
+>
+> #### 5. Optimized Data Retrieval and Output:
+> - Modified the code to use a more modular approach for retrieving, processing, and saving data.
+> - Enhanced the output by including additional context and relevant URLs, improving the readability and usefulness of responses.
+>
 
 
 
