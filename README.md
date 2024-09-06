@@ -317,13 +317,13 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > 3. Build the Docker image:
 > 
 >    ```bash
->    docker build -t my-python-app .
+>    docker build -t debate-bot .
 >    ```
 > 
 > 4. Run the Docker container interactively:
 > 
 >    ```bash
->    docker run --env-file .env -it my-python-app
+>    docker run --env-file .env -it debate-bot
 >    ```
 > 
 > **Outcome:**
