@@ -271,7 +271,65 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > #### 5. Optimized Data Retrieval and Output:
 > - Modified the code to use a more modular approach for retrieving, processing, and saving data.
 > - Enhanced the output by including additional context and relevant URLs, improving the readability and usefulness of responses.
->
+
+---
+> ### 09/06/2024
+> 
+> **Updated Files:**
+> 
+> - `requirements.txt`
+>   - Updated with new dependencies for the Python environment.
+> 
+> **Deleted Files:**
+> 
+> - `generated-client.zip`
+>   - Removed unnecessary file to keep the repository clean.
+> - `vectorized_chunks.pkl`
+>   - Removed old vectorization data to reduce clutter.
+> 
+> **Added Files:**
+> 
+> - `entrypoint.sh`
+>   - This script ensures that `OpenAPI__process_sources.py` runs first to completion before starting `debate_bot.py`.
+> - `Dockerfile`
+>   - Added to provide a containerized environment for the app, allowing it to be run locally via Docker.
+> 
+> **Purpose:**
+> 
+> To enable a streamlined setup for running the Python Q&A app in a Dockerized environment, ensuring all dependencies are managed and the correct sequence of operations is executed.
+> 
+> **Key Features:**
+> 
+> - `entrypoint.sh` orchestrates the execution order, ensuring that all source processing is done before the chatbot starts.
+> - Dockerized setup simplifies environment configuration and dependency management, making it easier for others to clone, build, and run the application locally.
+> 
+> **How to Build and Run:**
+> 
+> 1. Clone the repository:
+> 
+>    ```bash
+>    git clone https://github.com/Human-Rights-First-Innovation-Lab/debate_bot
+>    cd debate_bot
+>    ```
+> 
+> 2. Ensure `.env` is placed in the same directory.
+> 
+> 3. Build the Docker image:
+> 
+>    ```bash
+>    docker build -t my-python-app .
+>    ```
+> 
+> 4. Run the Docker container interactively:
+> 
+>    ```bash
+>    docker run --env-file .env -it my-python-app
+>    ```
+> 
+> **Outcome:**
+> 
+> Users can now easily run the Python Q&A application in an isolated Docker container, making it more accessible and reducing environment-related issues.
+
 
 
 
