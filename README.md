@@ -185,6 +185,92 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > 
 > - `OpenAPI__process_sources.py`
 >   - folder path changed to use sources instead of archive
+
+> ## 09/01/2024
+>
+> ### OpenAPI__process_sources.py
+>
+> #### Enhanced Preprocessing and Vectorization Function:
+>
+> - Updated the `preprocess_and_vectorize_combined` function to accept an additional `output_filename` parameter, allowing the flexibility to save vectorized chunks to specific files.
+> - Combined the logic for preprocessing, chunking, and vectorizing text from different sources (e.g., Reichert and Ferguson) within the same function call.
+>
+> #### Modular and Flexible Main Execution Flow:
+>
+> - Refactored the `main()` function to handle multiple candidate datasets in a loop. This allows for processing multiple folders (e.g., "reichert" and "ferguson") in a single run.
+> - Added a dictionary, `folder_paths`, to store folder paths for each candidate. This supports easy scaling and addition of more candidates if needed.
+> - Dynamically sets output filenames for vectorized chunks using candidate names (e.g., `vectorized_chunks_reichert.pkl` and `vectorized_chunks_ferguson.pkl`).
+>
+> #### Improved Code Readability and Maintainability:
+>
+> - Removed redundant code and improved function and variable naming for better clarity.
+> - Added informative print statements to provide feedback during processing, such as indicating the number of files processed and when vectorized chunks are saved successfully.
+> - Consolidated similar logic to avoid code duplication, making the script easier to maintain and extend.
+>
+> #### Bug Fixes and Robustness Improvements:
+>
+> - Fixed the output file handling to avoid overwriting the same file. Each candidate's vectorized chunks are saved in separate files with clearly defined names.
+> - Ensured compatibility with future expansions by making the code more modular and less error-prone through clear parameterization and usage of environment variables.
+>
+> #### Removal of Redundant Code:
+>
+> - Removed the duplicated block of code related to OpenAI client initialization and environment variable loading.
+> - Cleaned up the script to avoid any redundant comments and consolidated similar code into reusable functions.
+>
+> ### debate_bot.py
+>
+> #### Refactored `find_best_texts` Function to Support Multiple Files:
+>
+> - The `find_best_texts` function has been updated to process multiple vectorized files provided as a list (`filenames`) instead of just a single hard-coded file. This allows it to handle different datasets more flexibly.
+> - It iterates through each provided file, loading vectorized chunks and calculating cosine similarity between the query embedding and each chunk's embedding.
+> - The function now returns the top `n` results based on similarity for each dataset.
+>
+> #### Separate Retrieval and Response Handling for Multiple Candidates:
+>
+> - Updated the `chatbot_with_prevectorized_chunks` function to retrieve texts separately for each candidate (Reichert and Ferguson). It calls `find_best_texts()` with different filenames (`['vectorized_chunks_reichert.pkl']` and `['vectorized_chunks_ferguson.pkl']`).
+> - This separation ensures that responses are generated independently for each candidate using their specific contexts, preventing any mix-up between datasets.
+>
+> #### Enhanced Functionality for Saving Results:
+>
+> - Updated `save_to_csv` and `save_to_db` functions to handle and save results separately for each candidate. The updated code ensures that each candidate's response, context, and evaluation metrics are stored correctly in the database and CSV files.
+>
+> #### Refined the `generate_response` Function:
+>
+> - Modified the `generate_response` function to handle token length more precisely. If the generated prompt exceeds the maximum token limit, the context is truncated accordingly.
+> - Corrected the prompt generation process to provide clearer and more relevant instructions to the language model.
+>
+> #### Improved Context Handling and Metrics Evaluation:
+>
+> - The code now generates responses and calculates metrics for each candidate independently, ensuring that the model's output is evaluated separately for Reichert and Ferguson.
+> - Utilized `ragas` metrics (faithfulness and answer_relevancy) to score and evaluate the generated responses, which are then saved to the database and CSV files for each query.
+>
+---
+> ## 09/05/2024
+>
+>
+> #### 1. Added URL Extraction Functionality:
+> - Introduced the `extract_url_from_txt()` function to extract URLs from the top of `.txt` files.
+> - Validates if the first line is a valid URL and caches it for efficient access.
+> - Handles scenarios where the `.txt` file is missing or contains an invalid URL.
+>
+> #### 2. Updated `find_best_texts` Function:
+> - Modified to accept additional parameters: `pkl_filenames` and `txt_folder_path`.
+> - Added logic to extract and cache URLs from corresponding `.txt` files to avoid redundant reads.
+> - Returns a DataFrame that now includes URLs associated with each retrieved text chunk.
+>
+> #### 3. Enhanced Response Handling:
+> - Added logic to manage responses separately for each candidate (Reichert and Ferguson).
+> - Included source URLs in the print statements for better transparency of information sources.
+> - Introduced a conditional check: if the response contains "I do not have enough information," the source URL is set to `"None"`.
+>
+> #### 4. Improved Code Modularity and Error Handling:
+> - Removed hard-coded paths and added parameters to functions for better flexibility.
+> - Improved error handling for file operations and missing data, reducing potential crashes.
+> - Added informative print statements to provide better feedback during processing.
+>
+> #### 5. Optimized Data Retrieval and Output:
+> - Modified the code to use a more modular approach for retrieving, processing, and saving data.
+> - Enhanced the output by including additional context and relevant URLs, improving the readability and usefulness of responses.
 >
 
 
