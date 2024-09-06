@@ -1,6 +1,7 @@
 import openai
 import os
 import pickle
+import re
 import csv
 import json
 import numpy as np
@@ -163,31 +164,91 @@ def get_openai_embedding(text, model="text-embedding-3-small"):
         print(f"Error generating embeddings: {e}")
         return None
         
-# Get the texts associated with the top n best similarity. Takes in a query embedding. Returns a dataframe
-def find_best_texts(query_embedding, filenames, n):
+
+def extract_url_from_txt(file_path):
+    """
+    Extracts the URL from the top of a text file.
+
+    Args:
+        file_path: The path to the text file.
+
+    Returns:
+        The extracted URL as a string or None if the file doesn't exist.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            # Read the first line where the URL is expected
+            url = file.readline().strip()
+            # Validate if it is a URL
+            if re.match(r'(https?://\S+)', url):
+                return url
+            else:
+                print(f"No valid URL found at the top of {file_path}.")
+                return None
+    except FileNotFoundError:
+        print(f"File not found: {file_path}")
+        return None
+    except Exception as e:
+        print(f"Error reading URL from {file_path}: {e}")
+        return None
+
+def find_best_texts(query_embedding, pkl_filenames, txt_folder_path, n):
+    """
+    Finds the best texts based on similarity to the query embedding.
+    Also extracts the URL from each source file.
+
+    Args:
+        query_embedding: The embedding of the query text.
+        pkl_filenames: A list of pickle filenames to search in.
+        txt_folder_path: The directory containing the source .txt files.
+        n: The number of best texts to retrieve.
+
+    Returns:
+        A DataFrame of the best texts and their associated information.
+    """
     best_retrieved_texts = []
     best_filenames = []
     best_similarities = []
+    best_urls = []  # List to store URLs
 
-    # Process each file and retrieve texts
-    for filename in filenames:
-        with open(filename, 'rb') as file:
+    # Dictionary to cache URLs extracted from .txt files
+    url_cache = {}
+
+    # Process each .pkl file and retrieve texts
+    for pkl_filename in pkl_filenames:
+        with open(pkl_filename, 'rb') as file:
             vectorized_chunks = pickle.load(file)
 
-            for embedding, chunk, chunk_filenames in vectorized_chunks:  # Use a different name for clarity
+            # Process each chunk in the .pkl file
+            for embedding, chunk, chunk_filenames in vectorized_chunks:
+                # Extract the corresponding .txt filename
+                txt_filename = chunk_filenames[0]  # Assuming chunk_filenames contains the original .txt filename
+                
+                # Full path of the .txt file
+                txt_filepath = os.path.join(txt_folder_path, txt_filename)
+
+                # Check if the URL has already been extracted
+                if txt_filename not in url_cache:
+                    url = extract_url_from_txt(txt_filepath)
+                    url_cache[txt_filename] = url  # Cache the URL
+                else:
+                    url = url_cache[txt_filename]
+
+                # Compute similarity and store the best results
                 similarity_score = cosine(query_embedding, embedding)
-                # Only consider positive similarity scores
                 if similarity_score > 0:
                     best_similarities.append(similarity_score)
                     best_retrieved_texts.append(chunk[0])
-                    best_filenames.append(chunk_filenames[0])  # Use correct index if needed
+                    best_filenames.append(chunk_filenames[0])
+                    best_urls.append(url)  # Use the cached or newly extracted URL
 
     # Combine results into a DataFrame and sort by similarity
     text_similarities = pd.DataFrame(
         {
             'texts': best_retrieved_texts,
             'filenames': best_filenames,
-            'similarities': best_similarities
+            'similarities': best_similarities,
+            'urls': best_urls  # Include URLs in the DataFrame
         }
     )
 
@@ -199,8 +260,6 @@ def find_best_texts(query_embedding, filenames, n):
     # Return the top 'n' results
     return result.head(n)
 
-
-# Chatbot function
 def chatbot_with_prevectorized_chunks():
     session_id = 0  # TODO replace this with real session
 
@@ -222,9 +281,15 @@ def chatbot_with_prevectorized_chunks():
             continue
         
         # Retrieve texts for Reichert
-        best_texts_df_reichert = find_best_texts(query_embedding, ['vectorized_chunks_reichert.pkl'], 4)  # Ensure correct filename
+        best_texts_df_reichert = find_best_texts(
+            query_embedding, 
+            ['vectorized_chunks_reichert.pkl'],  # List of .pkl filenames
+            'Downloads/sources/reichert',  # Folder path for .txt files
+            4  # Number of best texts to retrieve
+        )
         best_retrieved_texts_reichert = best_texts_df_reichert["texts"].tolist()
         best_filenames_reichert = best_texts_df_reichert["filenames"].tolist()
+        source_url_reichert = best_texts_df_reichert["urls"].tolist()[0] if not best_texts_df_reichert.empty else "No URL found"
 
         # Generate a response for Reichert
         if best_retrieved_texts_reichert:
@@ -232,6 +297,10 @@ def chatbot_with_prevectorized_chunks():
         else:
             best_response_reichert = "No suitable chunk found for Reichert."
             best_filenames_reichert = 'N/A'
+
+        # Check if the response contains the phrase indicating lack of information
+        if "I do not have enough information" in best_response_reichert:
+            source_url_reichert = "None"
 
         # Handle response and save data for Reichert
         if best_response_reichert:
@@ -248,13 +317,16 @@ def chatbot_with_prevectorized_chunks():
             save_to_csv(data_reichert)
             save_to_db(data_reichert)
 
-        # Print the response for Reichert
-        print(f"Response for Reichert: {best_response_reichert}")
-
         # Retrieve texts for Ferguson
-        best_texts_df_ferguson = find_best_texts(query_embedding, ['vectorized_chunks_ferguson.pkl'], 4)  # Ensure correct filename
+        best_texts_df_ferguson = find_best_texts(
+            query_embedding, 
+            ['vectorized_chunks_ferguson.pkl'],  # List of .pkl filenames
+            'Downloads/sources/ferguson',  # Folder path for .txt files
+            4  # Number of best texts to retrieve
+        )
         best_retrieved_texts_ferguson = best_texts_df_ferguson["texts"].tolist()
         best_filenames_ferguson = best_texts_df_ferguson["filenames"].tolist()
+        source_url_ferguson = best_texts_df_ferguson["urls"].tolist()[0] if not best_texts_df_ferguson.empty else "No URL found"
 
         # Generate a response for Ferguson
         if best_retrieved_texts_ferguson:
@@ -262,6 +334,10 @@ def chatbot_with_prevectorized_chunks():
         else:
             best_response_ferguson = "No suitable chunk found for Ferguson."
             best_filenames_ferguson = 'N/A'
+
+        # Check if the response contains the phrase indicating lack of information
+        if "I do not have enough information" in best_response_ferguson:
+            source_url_ferguson = "None"
 
         # Handle response and save data for Ferguson
         if best_response_ferguson:
@@ -278,9 +354,9 @@ def chatbot_with_prevectorized_chunks():
             save_to_csv(data_ferguson)
             save_to_db(data_ferguson)
 
-        # Print the response for Ferguson
-        print(f"Response for Ferguson: {best_response_ferguson}")
-
+        # Print the responses with source URLs
+        print(f"Response for Ferguson: {best_response_ferguson}\nSource URL: {source_url_ferguson}")
+        print(f"Response for Reichert: {best_response_reichert}\nSource URL: {source_url_reichert}")
 
 # Main function
 def main():
