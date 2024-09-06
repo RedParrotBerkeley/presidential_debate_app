@@ -314,7 +314,7 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > 
 > 2. Ensure `.env` is placed in the same directory.
 >
-> 3. Download the appropriate docker desktop from https://www.docker.com/products/docker-desktop/
+> 3. Download the appropriate docker desktop from https://www.docker.com/products/docker-desktop/ for Windows navigate to https://docs.docker.com/desktop/install/windows-install/
 >    
 > 4. Build the Docker image:
 > 
