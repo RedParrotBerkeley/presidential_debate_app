@@ -313,22 +313,22 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >    ```
 > 
 > 2. Ensure `.env` is placed in the same directory.
-> 
-> 3. Build the Docker image:
+>
+> 3. Download the appropriate docker desktop from https://www.docker.com/products/docker-desktop/
+>    
+> 4. Build the Docker image:
 > 
 >    ```bash
 >    docker build -t debate-bot .
 >    ```
 > 
-> 4. Run the Docker container interactively:
+> 5. Run the Docker container interactively:
 > 
 >    ```bash
 >    docker run --env-file .env -it debate-bot
 >    ```
 > 
-> **Outcome:**
-> 
-> Users can now easily run the Python Q&A application in an isolated Docker container, making it more accessible and reducing environment-related issues.
+---
 
 
 
