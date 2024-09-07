@@ -311,7 +311,10 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >    git clone https://github.com/Human-Rights-First-Innovation-Lab/debate_bot
 >    cd debate_bot
 >    ```
-> 
+> if it is located in an alternate branch use after cloning
+>    ```bash
+>    git checkout branch-name
+>    ```
 > 2. Ensure `.env` is placed in the same directory.
 >
 > 3. Download the appropriate docker desktop from https://www.docker.com/products/docker-desktop/ for Windows navigate to https://docs.docker.com/desktop/install/windows-install/
