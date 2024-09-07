@@ -293,6 +293,7 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >   - This script ensures that `OpenAPI__process_sources.py` runs first to completion before starting `debate_bot.py`.
 > - `Dockerfile`
 >   - Added to provide a containerized environment for the app, allowing it to be run locally via Docker.
+> - `.gitattributes`  Enforce Unix-style line endings for all shell scripts in the repository
 > 
 > **Purpose:**
 > 
