@@ -23,10 +23,10 @@ COPY . .
 COPY entrypoint.sh .
 
 # Make the entrypoint script executable
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Use the shell script as the container entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Expose port if your application needs it (change 8080 to your desired port)
 # EXPOSE 8080 change this when FastAPI is set up - not needed now
