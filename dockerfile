@@ -19,14 +19,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code to the working directory
 COPY . .
 
-# Copy the entrypoint script to the working directory
-COPY entrypoint.sh .
+# Copy the entrypoint script explicitly to /app
+COPY entrypoint.sh /app/entrypoint.sh
 
 # Make the entrypoint script executable
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Use the shell script as the container entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Expose port if your application needs it (change 8080 to your desired port)
 # EXPOSE 8080 change this when FastAPI is set up - not needed now
