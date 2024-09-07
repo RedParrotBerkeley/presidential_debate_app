@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies required by some Python libraries (e.g., MySQL client)
-RUN apt-get update && apt-get install -y --no-install-recommends libmysqlclient-dev
+RUN apt-get update && apt-get install -y --no-install-recommends libmariadb-dev
 
 # Copy requirements.txt to the working directory in the container
 COPY requirements.txt .
