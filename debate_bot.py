@@ -284,7 +284,7 @@ def chatbot_with_prevectorized_chunks():
         best_texts_df_reichert = find_best_texts(
             query_embedding, 
             ['vectorized_chunks_reichert.pkl'],  # List of .pkl filenames
-            'Downloads/sources/reichert',  # Folder path for .txt files
+            '/sources/reichert',  # Folder path for .txt files
             4  # Number of best texts to retrieve
         )
         best_retrieved_texts_reichert = best_texts_df_reichert["texts"].tolist()
@@ -321,7 +321,7 @@ def chatbot_with_prevectorized_chunks():
         best_texts_df_ferguson = find_best_texts(
             query_embedding, 
             ['vectorized_chunks_ferguson.pkl'],  # List of .pkl filenames
-            'Downloads/sources/ferguson',  # Folder path for .txt files
+            '/sources/ferguson',  # Folder path for .txt files
             4  # Number of best texts to retrieve
         )
         best_retrieved_texts_ferguson = best_texts_df_ferguson["texts"].tolist()
