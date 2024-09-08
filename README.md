@@ -287,7 +287,11 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >    - Seattle Times 9 June 2024
 >    - Oxford Union 4 June 2024
 > - Reichert Directory
->    - Updated with new dependencies for the Python environment.
+>    - Seattle Times 7 July 2024
+>    - Race For Governor 23 July 2024
+>    - KOMO News 20 May 2024
+>    - Time For Change 5 April 2024
+>    - Trump Teriffs 31 May 2024
 >       
 > **Deleted Files:**
 > 
