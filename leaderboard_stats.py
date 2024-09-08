@@ -21,19 +21,30 @@ MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 
 
 def get_database_connection():
+    """
+    This gets a connection to the HRF debate bot mysql database using SQLAlchemy
+    Args:
+        none
+
+    Returns:
+        sqlalchemy connection object
+
+    """
     engine = sqlalchemy.create_engine(f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}')
     return engine
 
-def select_from_database(sql_string):
-    connection = get_database_connection()
-    cursor = connection.cursor()
-    cursor.execute(sql_string)
-    records = cursor.fetchall()
-    connection.close()
-    return records
-
-#overall winner, one session counts as one vote
 def get_winner_counts():
+    """
+    This gets the counts of wins each candidate had. One win is one session where the
+    user selected this candidate a majority of the time. Ties do not count as a win for anyone.
+
+    Args:
+        none
+
+    Returns:
+        dict {"ferguson_win_count": int, "reichert_win_count": int}
+
+    """
     connection = get_database_connection()
     query = '''
     select r.userVoted,
@@ -47,7 +58,6 @@ def get_winner_counts():
     winner_per_session = votes_per_candidate_per_session
     winner_per_session['ferguson_winner'] = np.where(winner_per_session[1]>winner_per_session[2], 1, 0)
     winner_per_session['reichert_winner'] = np.where(winner_per_session[2]>winner_per_session[1], 1, 0)
-    #ties count toward no one
     ferguson_win_count = winner_per_session['ferguson_winner'].sum()
     print("ferguson wins:", ferguson_win_count)
     reichert_win_count = winner_per_session['reichert_winner'].sum()
