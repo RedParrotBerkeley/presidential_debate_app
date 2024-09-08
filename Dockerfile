@@ -20,13 +20,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Copy the entrypoint script explicitly to /app
-COPY entrypoint.sh /app/entrypoint.sh
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
 # Make the entrypoint script executable
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Use the shell script as the container entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # Expose port if your application needs it (change 8080 to your desired port)
 # EXPOSE 8080 change this when FastAPI is set up - not needed now
