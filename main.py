@@ -56,6 +56,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
 from pydantic import BaseModel
+import leaderboard_stats as ls
 
 api_key = 'insertAPI'
 app = FastAPI()
@@ -229,6 +230,11 @@ async def query_handler(request: QueryRequest):
     save_to_csv(data)
 
     return {"response": best_response, "filename": best_filename}
+#Create an endpoint that handles POST requests with the user's query. This endpoint will use the utility functions to process the query and return a response.
+@app.post("/stats")
+async def stats_handler():
+    candidate_win_counts = ls.get_winner_counts()
+    return candidate_win_counts
 
 if __name__ == "__main__":
     api_key = 'insertAPI'
