@@ -63,7 +63,7 @@ def get_winner_counts():
     reichert_win_count = winner_per_session['reichert_winner'].sum()
     print("reichert wins:", reichert_win_count)
 
-    result = {"ferguson_win_count": ferguson_win_count, "reichert_win_count":reichert_win_count}
+    result = {"ferguson_win_count": int(ferguson_win_count), "reichert_win_count":int(reichert_win_count)}
     return result
 
 # participant demographics, % party 
