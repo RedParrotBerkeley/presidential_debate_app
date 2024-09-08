@@ -279,7 +279,12 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > 
 > - `requirements.txt`
 >   - Updated with new dependencies for the Python environment.
-> 
+>  
+> - Ferguson Directory
+>    - Updated with new dependencies for the Python environment.
+> - Reichert Directory
+>    - Updated with new dependencies for the Python environment.
+>       
 > **Deleted Files:**
 > 
 > - `generated-client.zip`
