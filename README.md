@@ -281,7 +281,11 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >   - Updated with new dependencies for the Python environment.
 >  
 > - Ferguson Directory
->    - Updated with new dependencies for the Python environment.
+>    - Change Agent 23 May 2024
+>    - KOMO News 14 July 2024
+>    - Race Announcment July 2024
+>    - Seattle Times 9 June 2024
+>    - Oxford Union 4 June 2024
 > - Reichert Directory
 >    - Updated with new dependencies for the Python environment.
 >       
