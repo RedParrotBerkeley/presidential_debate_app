@@ -5,36 +5,29 @@ import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
-from openapi_client.api.default_api import DefaultApi  # Import the API client
-from openapi_client.models.generate_embeddings_request import GenerateEmbeddingsRequest  # Import the request model
-from openapi_client.configuration import Configuration  # Import the configuration class
-from openapi_client.api_client import ApiClient  # Import the ApiClient class
+from dotenv import load_dotenv
 
-# Add API on lines 16 and 77 
+# Load environment variables
+load_dotenv()
 
 # Set your OpenAI API key
-api_key = os.getenv('OPENAI_API_KEY', 'INSERT API')  
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Model to use for embeddings
-model = 'text-embedding-ada-002'
+model = "text-embedding-3-small"
 
-# Configure API client with the API key in the headers
-configuration = Configuration()
-configuration.api_key_prefix['Authorization'] = 'Bearer'
-configuration.api_key['Authorization'] = api_key
-
-# Initialize the API client with the configuration
-api_client = ApiClient(configuration=configuration)
-
-# Initialize the DefaultApi client
-client = DefaultApi(api_client=api_client)
-
+# Initialize OpenAI client (Note: OpenAI does not have a 'client' object; it's directly openai. Remove if unused)
+openai.api_key = OPENAI_API_KEY
 print("API client initialized successfully.")
 
-# Function to extract text from a .txt file
-def extract_text_from_txt(file_path):
+def extract_text_and_url_from_txt(file_path):
+    """
+    Extracts text and URL from a .txt file. Assumes the URL is on the first line and the text follows.
+    """
     with open(file_path, 'r', encoding='utf-8') as file:
-        return file.read().split('\n\n')  # Return a list of paragraphs separated by double newlines
+        url = file.readline().strip()  # Read the URL from the first line
+        paragraphs = file.read().split('\n\n')  # Read the paragraphs after the URL
+    return url, paragraphs
 
 # Function to preprocess text
 def preprocess_text(text):
@@ -50,73 +43,77 @@ def estimate_tokens(text, model_name=model):
     encoding = tiktoken.encoding_for_model(model_name)
     return len(encoding.encode(text))
 
-# Function to chunk paragraphs into smaller pieces based on token length
-def chunk_paragraphs(paragraphs, filenames, chunk_size=2000, model_name=model):
+def chunk_paragraphs(paragraphs, filenames, urls, chunk_size=2000, model_name=model):
+    """
+    Chunk paragraphs and keep track of filenames and URLs.
+    """
     chunked_paragraphs = []
     current_chunk = []
     current_filenames = []
+    current_urls = []
     
-    for paragraph, filename in zip(paragraphs, filenames):
+    for paragraph, filename, url in zip(paragraphs, filenames, urls):
         paragraph_length = len(paragraph)
         current_filenames = [filename]
+        current_urls = [url]
         while paragraph_length > chunk_size:
             current_chunk = [paragraph[:chunk_size]]
-            chunked_paragraphs.append((current_chunk, current_filenames))
+            chunked_paragraphs.append((current_chunk, current_filenames, current_urls))
             paragraph = paragraph[chunk_size:]
             paragraph_length = len(paragraph)
         if (paragraph_length > 0) and (paragraph_length < chunk_size):
-            chunked_paragraphs.append(([paragraph], [filename]))
+            chunked_paragraphs.append(([paragraph], [filename], [url]))
     
     return chunked_paragraphs
 
-# Function to get OpenAI embeddings using the new API
-def get_openai_embedding(text):
-    try:
-        request_body = GenerateEmbeddingsRequest(input=[text], model=model)
-        headers = {
-            "Authorization": f"Bearer {'INSERT API'}" 
-        }
-        response = client.generate_embeddings(request_body, _headers=headers)  # Pass the headers with the request
-        # Access the embedding from the response object
-        print(f"Embedding generated successfully for text: {text[:30]}...")  # Print a snippet of the text
-        return response.data[0].embedding
-    except Exception as e:
-        print(f"Error generating embeddings: {e}")
-        return None
-
+def get_openai_embedding(text, model=model):
+    text = text.replace("\n", " ")
+    return openai.embeddings.create(input = [text], model=model).data[0].embedding
+    
 # Function to preprocess, chunk, and vectorize using OpenAI embeddings
-def preprocess_and_vectorize_combined(folder_path, chunk_size=2000, model_name=model):
+def preprocess_and_vectorize_combined(folder_path, output_filename, chunk_size=2000, model_name=model):
     all_texts = []
     all_filenames = []
+    all_urls = []
 
     for filename in os.listdir(folder_path):
         if filename.endswith('.txt'):
             file_path = os.path.join(folder_path, filename)
-            raw_paragraphs = extract_text_from_txt(file_path)
+            url, raw_paragraphs = extract_text_and_url_from_txt(file_path)
             all_texts.extend(raw_paragraphs)
             all_filenames.extend([filename] * len(raw_paragraphs))
+            all_urls.extend([url] * len(raw_paragraphs))  # Store URL for each paragraph
 
-    print(f"Extracted and preprocessed text from {len(all_filenames)} files.")
+    print(f"Extracted and preprocessed text from {len(all_filenames)} files in {folder_path}.")
 
     processed_paragraphs = preprocess_paragraphs(all_texts)
-    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, chunk_size, model_name)
+    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, all_urls, chunk_size, model_name)
 
     vectorized_chunks = []
-    for chunk, filenames in chunked_paragraphs:
+    for chunk, filenames, urls in chunked_paragraphs:
         if chunk:
             embedding = get_openai_embedding(chunk[0])  # Get embedding for the chunk
             if embedding:
-                vectorized_chunks.append((embedding, chunk, filenames))
-                print(f"Vectorized chunk from file {filenames[0]}.")
+                vectorized_chunks.append((embedding, chunk, filenames, urls))  # Include URLs
+                print(f"Vectorized chunk from file {filenames[0]} with URL {urls[0]}.")
 
-    with open('vectorized_chunks.pkl', 'wb+') as file:
+    with open(output_filename, 'wb+') as file:
         pickle.dump(vectorized_chunks, file)
-    print("Vectorized chunks saved successfully.")
+    print(f"Vectorized chunks saved to {output_filename} successfully.")
 
 def main():
-    folder_path = 'Downloads/archive/'
-    preprocess_and_vectorize_combined(folder_path, chunk_size=1000)
-    print("Process completed successfully.")
+    # Define folders and output filenames
+    folder_paths = {
+        'reichert': 'Downloads/sources/reichert/',
+        'ferguson': 'Downloads/sources/ferguson/'
+    }
+    
+    # Process both folders
+    for candidate, folder_path in folder_paths.items():
+        output_filename = f'vectorized_chunks_{candidate}.pkl'
+        preprocess_and_vectorize_combined(folder_path, output_filename, chunk_size=500)
+    
+    print("Process completed successfully for both candidates.")
 
 if __name__ == "__main__":
     main()

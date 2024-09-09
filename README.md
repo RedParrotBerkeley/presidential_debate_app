@@ -21,49 +21,6 @@ The **Presidential Debate Simulator** is an interactive web application designed
 2. **Read Responses**: Review the responses from Candidate A and Candidate B.
 3. **Vote**: Vote for the response you like best by clicking the "Vote" button under the candidate's response.
 4. **End Debate**: Click "End Debate" to see the results.
-~~5. **Test Your Knowledge**: Answer trivia questions by selecting the correct candidate.~~
-
-~~## Decrypting the API Key~~ NO LONGER SUPPORTED
-
-~~To decrypt the API key on Windows, follow these steps:~~
-
-~~1. Ensure you have OpenSSL installed on your system. If not, download and install it from [OpenSSL for Windows](https://slproweb.com/products/Win32OpenSSL.html).~~
-
-~~2. Download the `api_key.enc` file from this repository.~~
-
-~~3. Open a terminal (Command Prompt, PowerShell, etc.) and navigate to the directory containing `api_key.enc`.~~
-
-~~4. Run the following command to decrypt the API key:~~
-~~```sh~~
-   ~~openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2~~
-
-~~For Unix (Linux/Mac):~~
-~~1. Ensure you have OpenSSL installed on your system. You can install it using your package manager if it's not already installed.~~
-
-~~For Linux:~~
-
-~~sudo apt-get install openssl  # Debian/Ubuntu~~
-~~sudo yum install openssl      # CentOS/RHEL~~
-~~sudo pacman -S openssl        # Arch Linux~~
-
-~~For Mac:~~
-
-~~brew install openssl~~
-
-~~2. Download the api_key.enc file from this repository.~~
-
-~~3. Move the api_key.enc file to your desired directory (e.g., your home directory).~~
-
-~~4. Open a terminal and navigate to the directory containing api_key.enc. For example:~~
-
-~~cd /Desktop~~
-
-~~5. Run the following command to decrypt the API key:~~
-
-~~openssl enc -aes-256-cbc -d -in api_key.enc -out api_key.txt -pass pass:judge123!! -pbkdf2~~
-
-~~6. This will create a file named api_key.txt in the same directory containing the decrypted API key.~~
-
 
 ## Getting Started
 
@@ -74,7 +31,6 @@ To run this project locally:
    git clone https://github.com/yourusername/presidential-debate-simulator.git
 2. Navigate to directory:
    cd presidential-debate-simulator
-~~3. Open script.js and paste the decrypted apiKey into line 39 and 321 and click save~~
 3. Create an API via openai.com and paste the apiKey into line 39 and 321 and click save. 
    
 4. Open index.html in your web browser. (Best using Chrome)
@@ -180,7 +136,10 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > 2. Run the following - `java -jar C:\openapi-generator-cli.jar generate -i 'PATH TO "openai-api.yaml"' -g python -o ./generated-client`
 > 3. You can install the generated client into your Python environment by navigating to the generated-client directory and running: `pip install .`
 > 4. By default, the generated-client folder is created in the current working directory from which you run the OpenAPI Generator command.
->   
+> 
+
+---
+
 > ### 08/25/2024
 > 
 > **Update:**
@@ -192,7 +151,206 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > **Purpose:**
 > 
 >  The RAGAS scores are to keep a pulse on how good our chat bot answers are. These can be analyzed to help us improve the application.
+>   
+
+---
+
+> ### 08/27/2024
 > 
+> **Added Files:**
+> 
+> - `suggested_questions.txt`
+>   - Add sample questions into text file
+> 
+> **Purpose:**
+> 
+>  The sample questions will be the ones suggested to the users in the game. They will also be the baseline questions for which we will create a test set and validate that we have the right answers
+> 
+
+---
+
+> ### 08/28/2024
+> 
+> **Added Files:**
+> 
+> - `debate_bot.py`
+>   - The new main file of the chatbot. This combines what was `openapi_RAG Debate.py` with the updates to pull queries from and save responses to the mysql database.
+>   - This also has a fix for retrieving bad texts by switching the "ascending" parameter of the sort to True
+>
+> - `sources/reichert/Reichert_WA_Seattletimes_Jul07_2024.txt` 
+>   - start using document sources of our new candidates 
+>   - old sources were moved into archive
+> 
+> **Update:**
+> 
+> - `OpenAPI__process_sources.py`
+>   - folder path changed to use sources instead of archive
+
+> ## 09/01/2024
+>
+> ### OpenAPI__process_sources.py
+>
+> #### Enhanced Preprocessing and Vectorization Function:
+>
+> - Updated the `preprocess_and_vectorize_combined` function to accept an additional `output_filename` parameter, allowing the flexibility to save vectorized chunks to specific files.
+> - Combined the logic for preprocessing, chunking, and vectorizing text from different sources (e.g., Reichert and Ferguson) within the same function call.
+>
+> #### Modular and Flexible Main Execution Flow:
+>
+> - Refactored the `main()` function to handle multiple candidate datasets in a loop. This allows for processing multiple folders (e.g., "reichert" and "ferguson") in a single run.
+> - Added a dictionary, `folder_paths`, to store folder paths for each candidate. This supports easy scaling and addition of more candidates if needed.
+> - Dynamically sets output filenames for vectorized chunks using candidate names (e.g., `vectorized_chunks_reichert.pkl` and `vectorized_chunks_ferguson.pkl`).
+>
+> #### Improved Code Readability and Maintainability:
+>
+> - Removed redundant code and improved function and variable naming for better clarity.
+> - Added informative print statements to provide feedback during processing, such as indicating the number of files processed and when vectorized chunks are saved successfully.
+> - Consolidated similar logic to avoid code duplication, making the script easier to maintain and extend.
+>
+> #### Bug Fixes and Robustness Improvements:
+>
+> - Fixed the output file handling to avoid overwriting the same file. Each candidate's vectorized chunks are saved in separate files with clearly defined names.
+> - Ensured compatibility with future expansions by making the code more modular and less error-prone through clear parameterization and usage of environment variables.
+>
+> #### Removal of Redundant Code:
+>
+> - Removed the duplicated block of code related to OpenAI client initialization and environment variable loading.
+> - Cleaned up the script to avoid any redundant comments and consolidated similar code into reusable functions.
+>
+> ### debate_bot.py
+>
+> #### Refactored `find_best_texts` Function to Support Multiple Files:
+>
+> - The `find_best_texts` function has been updated to process multiple vectorized files provided as a list (`filenames`) instead of just a single hard-coded file. This allows it to handle different datasets more flexibly.
+> - It iterates through each provided file, loading vectorized chunks and calculating cosine similarity between the query embedding and each chunk's embedding.
+> - The function now returns the top `n` results based on similarity for each dataset.
+>
+> #### Separate Retrieval and Response Handling for Multiple Candidates:
+>
+> - Updated the `chatbot_with_prevectorized_chunks` function to retrieve texts separately for each candidate (Reichert and Ferguson). It calls `find_best_texts()` with different filenames (`['vectorized_chunks_reichert.pkl']` and `['vectorized_chunks_ferguson.pkl']`).
+> - This separation ensures that responses are generated independently for each candidate using their specific contexts, preventing any mix-up between datasets.
+>
+> #### Enhanced Functionality for Saving Results:
+>
+> - Updated `save_to_csv` and `save_to_db` functions to handle and save results separately for each candidate. The updated code ensures that each candidate's response, context, and evaluation metrics are stored correctly in the database and CSV files.
+>
+> #### Refined the `generate_response` Function:
+>
+> - Modified the `generate_response` function to handle token length more precisely. If the generated prompt exceeds the maximum token limit, the context is truncated accordingly.
+> - Corrected the prompt generation process to provide clearer and more relevant instructions to the language model.
+>
+> #### Improved Context Handling and Metrics Evaluation:
+>
+> - The code now generates responses and calculates metrics for each candidate independently, ensuring that the model's output is evaluated separately for Reichert and Ferguson.
+> - Utilized `ragas` metrics (faithfulness and answer_relevancy) to score and evaluate the generated responses, which are then saved to the database and CSV files for each query.
+>
+---
+> ## 09/05/2024
+>
+>
+> #### 1. Added URL Extraction Functionality:
+> - Introduced the `extract_url_from_txt()` function to extract URLs from the top of `.txt` files.
+> - Validates if the first line is a valid URL and caches it for efficient access.
+> - Handles scenarios where the `.txt` file is missing or contains an invalid URL.
+>
+> #### 2. Updated `find_best_texts` Function:
+> - Modified to accept additional parameters: `pkl_filenames` and `txt_folder_path`.
+> - Added logic to extract and cache URLs from corresponding `.txt` files to avoid redundant reads.
+> - Returns a DataFrame that now includes URLs associated with each retrieved text chunk.
+>
+> #### 3. Enhanced Response Handling:
+> - Added logic to manage responses separately for each candidate (Reichert and Ferguson).
+> - Included source URLs in the print statements for better transparency of information sources.
+> - Introduced a conditional check: if the response contains "I do not have enough information," the source URL is set to `"None"`.
+>
+> #### 4. Improved Code Modularity and Error Handling:
+> - Removed hard-coded paths and added parameters to functions for better flexibility.
+> - Improved error handling for file operations and missing data, reducing potential crashes.
+> - Added informative print statements to provide better feedback during processing.
+>
+> #### 5. Optimized Data Retrieval and Output:
+> - Modified the code to use a more modular approach for retrieving, processing, and saving data.
+> - Enhanced the output by including additional context and relevant URLs, improving the readability and usefulness of responses.
+
+---
+> ### 09/06/2024
+> 
+> **Updated Files:**
+> 
+> - `requirements.txt`
+>   - Updated with new dependencies for the Python environment.
+>  
+> - Ferguson Directory
+>    - Change Agent 23 May 2024
+>    - KOMO News 14 July 2024
+>    - Race Announcment July 2024
+>    - Seattle Times 9 June 2024
+>    - Oxford Union 4 June 2024
+>    - Ferguson Issues Official Website 
+> - Reichert Directory
+>    - Seattle Times 7 July 2024
+>    - Race For Governor 23 July 2024
+>    - KOMO News 20 May 2024
+>    - Time For Change 5 April 2024
+>    - Trump Teriffs 31 May 2024
+>    - Reichert Issues Official Website
+>       
+> **Deleted Files:**
+> 
+> - `generated-client.zip`
+>   - Removed unnecessary file to keep the repository clean.
+> - `vectorized_chunks.pkl`
+>   - Removed old vectorization data to reduce clutter.
+> 
+> **Added Files:**
+> 
+> - `entrypoint.sh`
+>   - This script ensures that `OpenAPI__process_sources.py` runs first to completion before starting `debate_bot.py`.
+> - `Dockerfile`
+>   - Added to provide a containerized environment for the app, allowing it to be run locally via Docker.
+> - `.gitattributes`  Enforce Unix-style line endings for all shell scripts in the repository
+> 
+> **Purpose:**
+> 
+> To enable a streamlined setup for running the Python Q&A app in a Dockerized environment, ensuring all dependencies are managed and the correct sequence of operations is executed.
+> 
+> **Key Features:**
+> 
+> - `entrypoint.sh` orchestrates the execution order, ensuring that all source processing is done before the chatbot starts.
+> - Dockerized setup simplifies environment configuration and dependency management, making it easier for others to clone, build, and run the application locally.
+> 
+> **How to Build and Run:**
+> 
+> 1. Clone the repository:
+> 
+>    ```bash
+>    git clone https://github.com/Human-Rights-First-Innovation-Lab/debate_bot
+>    cd debate_bot
+>    ```
+> if it is located in an alternate branch use after cloning
+>    ```bash
+>    git checkout branch-name
+>    ```
+> 2. Ensure `.env` is placed in the same directory.
+>
+> 3. Download the appropriate docker desktop from https://www.docker.com/products/docker-desktop/ for Windows navigate to https://docs.docker.com/desktop/install/windows-install/
+>    
+> 4. Build the Docker image:
+> 
+>    ```bash
+>    docker build -t debate-bot .
+>    ```
+> 
+> 5. Run the Docker container interactively:
+> 
+>    ```bash
+>    docker run --env-file .env -it debate-bot
+>    ```
+> 
+---
+
+
+
 
 ## 📜 License
 
