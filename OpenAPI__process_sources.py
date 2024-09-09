@@ -20,10 +20,14 @@ model = "text-embedding-3-small"
 openai.api_key = OPENAI_API_KEY
 print("API client initialized successfully.")
 
-# Function to extract text from a .txt file
-def extract_text_from_txt(file_path):
+def extract_text_and_url_from_txt(file_path):
+    """
+    Extracts text and URL from a .txt file. Assumes the URL is on the first line and the text follows.
+    """
     with open(file_path, 'r', encoding='utf-8') as file:
-        return file.read().split('\n\n')  # Return a list of paragraphs separated by double newlines
+        url = file.readline().strip()  # Read the URL from the first line
+        paragraphs = file.read().split('\n\n')  # Read the paragraphs after the URL
+    return url, paragraphs
 
 # Function to preprocess text
 def preprocess_text(text):
@@ -39,22 +43,26 @@ def estimate_tokens(text, model_name=model):
     encoding = tiktoken.encoding_for_model(model_name)
     return len(encoding.encode(text))
 
-# Function to chunk paragraphs into smaller pieces based on token length
-def chunk_paragraphs(paragraphs, filenames, chunk_size=2000, model_name=model):
+def chunk_paragraphs(paragraphs, filenames, urls, chunk_size=2000, model_name=model):
+    """
+    Chunk paragraphs and keep track of filenames and URLs.
+    """
     chunked_paragraphs = []
     current_chunk = []
     current_filenames = []
+    current_urls = []
     
-    for paragraph, filename in zip(paragraphs, filenames):
+    for paragraph, filename, url in zip(paragraphs, filenames, urls):
         paragraph_length = len(paragraph)
         current_filenames = [filename]
+        current_urls = [url]
         while paragraph_length > chunk_size:
             current_chunk = [paragraph[:chunk_size]]
-            chunked_paragraphs.append((current_chunk, current_filenames))
+            chunked_paragraphs.append((current_chunk, current_filenames, current_urls))
             paragraph = paragraph[chunk_size:]
             paragraph_length = len(paragraph)
         if (paragraph_length > 0) and (paragraph_length < chunk_size):
-            chunked_paragraphs.append(([paragraph], [filename]))
+            chunked_paragraphs.append(([paragraph], [filename], [url]))
     
     return chunked_paragraphs
 
@@ -66,26 +74,28 @@ def get_openai_embedding(text, model=model):
 def preprocess_and_vectorize_combined(folder_path, output_filename, chunk_size=2000, model_name=model):
     all_texts = []
     all_filenames = []
+    all_urls = []
 
     for filename in os.listdir(folder_path):
         if filename.endswith('.txt'):
             file_path = os.path.join(folder_path, filename)
-            raw_paragraphs = extract_text_from_txt(file_path)
+            url, raw_paragraphs = extract_text_and_url_from_txt(file_path)
             all_texts.extend(raw_paragraphs)
             all_filenames.extend([filename] * len(raw_paragraphs))
+            all_urls.extend([url] * len(raw_paragraphs))  # Store URL for each paragraph
 
     print(f"Extracted and preprocessed text from {len(all_filenames)} files in {folder_path}.")
 
     processed_paragraphs = preprocess_paragraphs(all_texts)
-    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, chunk_size, model_name)
+    chunked_paragraphs = chunk_paragraphs(processed_paragraphs, all_filenames, all_urls, chunk_size, model_name)
 
     vectorized_chunks = []
-    for chunk, filenames in chunked_paragraphs:
+    for chunk, filenames, urls in chunked_paragraphs:
         if chunk:
             embedding = get_openai_embedding(chunk[0])  # Get embedding for the chunk
             if embedding:
-                vectorized_chunks.append((embedding, chunk, filenames))
-                print(f"Vectorized chunk from file {filenames[0]}.")
+                vectorized_chunks.append((embedding, chunk, filenames, urls))  # Include URLs
+                print(f"Vectorized chunk from file {filenames[0]} with URL {urls[0]}.")
 
     with open(output_filename, 'wb+') as file:
         pickle.dump(vectorized_chunks, file)
@@ -94,8 +104,8 @@ def preprocess_and_vectorize_combined(folder_path, output_filename, chunk_size=2
 def main():
     # Define folders and output filenames
     folder_paths = {
-        'reichert': 'sources/reichert/',
-        'ferguson': 'sources/ferguson/'
+        'reichert': 'Downloads/sources/reichert/',
+        'ferguson': 'Downloads/sources/ferguson/'
     }
     
     # Process both folders

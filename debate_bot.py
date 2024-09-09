@@ -220,27 +220,17 @@ def find_best_texts(query_embedding, pkl_filenames, txt_folder_path, n):
             vectorized_chunks = pickle.load(file)
 
             # Process each chunk in the .pkl file
-            for embedding, chunk, chunk_filenames in vectorized_chunks:
+            for embedding, chunk, chunk_filenames, chunk_urls in vectorized_chunks:
                 # Extract the corresponding .txt filename
                 txt_filename = chunk_filenames[0]  # Assuming chunk_filenames contains the original .txt filename
                 
-                # Full path of the .txt file
-                txt_filepath = os.path.join(txt_folder_path, txt_filename)
-
-                # Check if the URL has already been extracted
-                if txt_filename not in url_cache:
-                    url = extract_url_from_txt(txt_filepath)
-                    url_cache[txt_filename] = url  # Cache the URL
-                else:
-                    url = url_cache[txt_filename]
-
                 # Compute similarity and store the best results
                 similarity_score = cosine(query_embedding, embedding)
                 if similarity_score > 0:
                     best_similarities.append(similarity_score)
                     best_retrieved_texts.append(chunk[0])
                     best_filenames.append(chunk_filenames[0])
-                    best_urls.append(url)  # Use the cached or newly extracted URL
+                    best_urls.append(chunk_urls[0])  # Use the URL from the .pkl file
 
     # Combine results into a DataFrame and sort by similarity
     text_similarities = pd.DataFrame(
@@ -259,6 +249,7 @@ def find_best_texts(query_embedding, pkl_filenames, txt_folder_path, n):
 
     # Return the top 'n' results
     return result.head(n)
+
 
 def chatbot_with_prevectorized_chunks():
     session_id = 0  # TODO replace this with real session
@@ -284,7 +275,7 @@ def chatbot_with_prevectorized_chunks():
         best_texts_df_reichert = find_best_texts(
             query_embedding, 
             ['vectorized_chunks_reichert.pkl'],  # List of .pkl filenames
-            'Downloads/sources/reichert',  # Folder path for .txt files
+            '/sources/reichert',  # Folder path for .txt files
             4  # Number of best texts to retrieve
         )
         best_retrieved_texts_reichert = best_texts_df_reichert["texts"].tolist()
@@ -321,7 +312,7 @@ def chatbot_with_prevectorized_chunks():
         best_texts_df_ferguson = find_best_texts(
             query_embedding, 
             ['vectorized_chunks_ferguson.pkl'],  # List of .pkl filenames
-            'Downloads/sources/ferguson',  # Folder path for .txt files
+            '/sources/ferguson',  # Folder path for .txt files
             4  # Number of best texts to retrieve
         )
         best_retrieved_texts_ferguson = best_texts_df_ferguson["texts"].tolist()

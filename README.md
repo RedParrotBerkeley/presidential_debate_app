@@ -1,4 +1,3 @@
-
 # 🎙️ Political Debate Simulator
 ## 🏆 Winner of the 2024 Code the Vote Hackathon
 
@@ -271,14 +270,69 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > #### 5. Optimized Data Retrieval and Output:
 > - Modified the code to use a more modular approach for retrieving, processing, and saving data.
 > - Enhanced the output by including additional context and relevant URLs, improving the readability and usefulness of responses.
->
+
 ---
-> ## 09/08/2024
+> ### 09/06/2024
+> 
+> **Updated Files:**
+> 
+> - `requirements.txt`
+>   - Updated with new dependencies for the Python environment.
+>  
+> - Ferguson Directory
+>    - Change Agent 23 May 2024
+>    - KOMO News 14 July 2024
+>    - Race Announcment July 2024
+>    - Seattle Times 9 June 2024
+>    - Oxford Union 4 June 2024
+>    - Ferguson Issues Official Website 
+> - Reichert Directory
+>    - Seattle Times 7 July 2024
+>    - Race For Governor 23 July 2024
+>    - KOMO News 20 May 2024
+>    - Time For Change 5 April 2024
+>    - Trump Teriffs 31 May 2024
+>    - Reichert Issues Official Website
+>       
+> **Deleted Files:**
+> 
+> - `generated-client.zip`
+>   - Removed unnecessary file to keep the repository clean.
+> - `vectorized_chunks.pkl`
+>   - Removed old vectorization data to reduce clutter.
+> 
+> **Added Files:**
+> 
+> - `entrypoint.sh`
+>   - This script ensures that `OpenAPI__process_sources.py` runs first to completion before starting `debate_bot.py`.
+> - `Dockerfile`
+>   - Added to provide a containerized environment for the app, allowing it to be run locally via Docker.
+> - `.gitattributes`  Enforce Unix-style line endings for all shell scripts in the repository
+> 
+> **Purpose:**
+> 
+> To enable a streamlined setup for running the Python Q&A app in a Dockerized environment, ensuring all dependencies are managed and the correct sequence of operations is executed.
+> 
+> **Key Features:**
+> 
+> - `entrypoint.sh` orchestrates the execution order, ensuring that all source processing is done before the chatbot starts.
+> - Dockerized setup simplifies environment configuration and dependency management, making it easier for others to clone, build, and run the application locally.
+> 
+> **How to Build and Run:**
+> 
+> 1. Clone the repository:
+> 
+>    ```bash
+>    git clone https://github.com/Human-Rights-First-Innovation-Lab/debate_bot
+>    cd debate_bot
+>    ```
+> if it is located in an alternate branch use after cloning
+>    ```bash
+>    git checkout branch-name
+>    ```
+> 2. Ensure `.env` is placed in the same directory.
 >
-> #### Add candidate win counts:
-> - Added the `leaderboard_stats.py` file to hold functions related to getting stats for the leaderboard page
-> - Added `get_winner_counts()` to get count of each candidate's wins
-> - added a handler `stats_handler()` in `main.py` to provide the api the json structure with placeholder values  
+
 
 
 
