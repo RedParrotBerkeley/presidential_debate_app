@@ -272,6 +272,13 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > - Modified the code to use a more modular approach for retrieving, processing, and saving data.
 > - Enhanced the output by including additional context and relevant URLs, improving the readability and usefulness of responses.
 >
+---
+> ## 09/08/2024
+>
+> #### Add candidate win counts:
+> - Added the `leaderboard_stats.py` file to hold functions related to getting stats for the leaderboard page
+> - Added `get_winner_counts()` to get count of each candidate's wins
+> - added a handler `stats_handler()` in `main.py` to provide the api the json structure with placeholder values  
 
 
 
