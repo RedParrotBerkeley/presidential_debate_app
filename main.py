@@ -51,11 +51,13 @@ import os
 import re
 import pickle
 import csv
+import json
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken  # OpenAI's tokenizer
 from pydantic import BaseModel
+import leaderboard_stats as ls
 
 api_key = 'insertAPI'
 app = FastAPI()
@@ -229,6 +231,34 @@ async def query_handler(request: QueryRequest):
     save_to_csv(data)
 
     return {"response": best_response, "filename": best_filename}
+#Create an endpoint that handles POST requests with the user's query. This endpoint will use the utility functions to process the query and return a response.
+@app.post("/stats")
+async def stats_handler():
+    candidate_win_counts = ls.get_winner_counts()
+    # participant demographics placeholder
+    participant_party = {"republican": 1, "democrat": 1, "no_affliation": 1, "prefer_not_to_say": 1}
+    # by age range
+    participant_age = {"18-35": 1, "36-55": 1, "56-75": 1, "76+": 1}
+    # by gender
+    participant_gender = {"male": 1, "female": 1, "nonbinary": 1, "prefer_not_to_say": 1}
+    # top categories asked about
+    top_categories = [("Economy", 9),
+    ("Healthcare", 8),
+    ("Education", 7),
+    ("Immigration", 6),
+    ("Environment",5),
+    ("Gun Control", 4),
+    ("Infrastructure", 3),
+    ("Foreign Policy", 2),
+    ("Housing", 1),
+    ("Social Welfare Programs",1)]
+    response = json.dumps({"candidate_win_counts": candidate_win_counts, 
+        "participant_party": participant_party,
+        "participant_age":participant_age,
+        "participant_gender":participant_gender,
+        "top_categories": top_categories
+    })
+    return response
 
 if __name__ == "__main__":
     api_key = 'insertAPI'

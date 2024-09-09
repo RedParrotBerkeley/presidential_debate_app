@@ -1,4 +1,3 @@
-
 # 🎙️ Political Debate Simulator
 ## 🏆 Winner of the 2024 Code the Vote Hackathon
 
@@ -333,21 +332,6 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >    ```
 > 2. Ensure `.env` is placed in the same directory.
 >
-> 3. Download the appropriate docker desktop from https://www.docker.com/products/docker-desktop/ for Windows navigate to https://docs.docker.com/desktop/install/windows-install/
->    
-> 4. Build the Docker image:
-> 
->    ```bash
->    docker build -t debate-bot .
->    ```
-> 
-> 5. Run the Docker container interactively:
-> 
->    ```bash
->    docker run --env-file .env -it debate-bot
->    ```
-> 
----
 
 
 
