@@ -341,9 +341,9 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >    ```
 > 
 > 5. Run the Docker container interactively:
-> 
+>  Replace port mapping
 >    ```bash
->    docker run --env-file .env -it debate-bot
+>    docker run -d -p 8080:8080 --env-file .env -it debate-bot
 >    ```
 > 
 ---
