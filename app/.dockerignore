@@ -1,9 +1,0 @@
-# .dockerignore
-
-# Exclude everything by default
-**
-
-# Allow specific files and directories
-!app/
-!requirements.txt
-!README.md
