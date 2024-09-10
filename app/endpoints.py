@@ -36,7 +36,7 @@ class SaveRequest(BaseModel):
 @router.post("/generate-response/", response_model=List[ResponseData])
 async def generate_response_endpoint(request: QueryRequest):
     try:
-        # Extract query from request
+        # Extract query from request - return response include query ID instead of array maybe put dictionary?
         query = request.query
 
         # Insert user query into the database
@@ -84,14 +84,28 @@ async def generate_response_endpoint(request: QueryRequest):
         # Print formatted response for Ferguson
         print(f"Response for Ferguson: {best_response_ferguson}\nSource URL: {source_url_ferguson}")
 
-        # Return both responses in a list
-        return [
-            {"response": best_response_reichert, "source_url": source_url_reichert},
-            {"response": best_response_ferguson, "source_url": source_url_ferguson}
-        ]
+        # Return response as a dictionary
+        return {
+            "query_id": query_id,
+            "responses": {
+                "reichert": {
+                    "response": best_response_reichert,
+                    "source_url": source_url_reichert
+                },
+                "ferguson": {
+                    "response": best_response_ferguson,
+                    "source_url": source_url_ferguson
+                }
+            }
+        }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Improved exception handling
+        print(f"An error occurred: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while processing your request. Please try again later."
+        )
 
 # Endpoint to save response data to the database
 @router.post("/save-response/")
