@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from endpoints import router  # Ensure this import points to your endpoints file
-from utils import (
+from app.endpoints import router  # Ensure this import points to your endpoints file
+from app.utils import (
     insert_into_database,
     select_from_database,
     generate_response,
