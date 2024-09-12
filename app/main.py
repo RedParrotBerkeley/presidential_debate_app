@@ -8,7 +8,18 @@ from app.utils import (
     find_best_texts,
     save_to_db,
 )
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from the .env file located in the /app directory
+load_dotenv(dotenv_path="/app/.env")  # Correctly point to where .env is copied in the container
+
+# Access the API key from environment variables
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+# Set the API key for the OpenAI client
+import openai
+openai.api_key = openai_api_key
 # Initialize FastAPI app
 app = FastAPI()
 
