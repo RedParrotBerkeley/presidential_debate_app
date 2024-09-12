@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 import mysql.connector
 import pandas as pd
 import sqlalchemy
+from sqlalchemy import Table, Column, Integer, String, update, bindparam
+import openai
 
 #load envrionment variables
 load_dotenv()
@@ -19,6 +21,9 @@ MYSQL_HOST = os.getenv('MYSQL_HOST')
 MYSQL_PORT = os.getenv('MYSQL_PORT')
 MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+openai.api_key = OPENAI_API_KEY
 
 def get_database_connection():
     """
@@ -75,3 +80,80 @@ def get_winner_counts():
 # top categories asked about
 
 # 
+def categorize_question(question):
+    prompts=[{"role": "system", "content": 
+        """
+        You are a political scientist at a national newspaper. 
+        Categorize the next statements to their most relevant political key issue.
+        If the statement is not similar to any key issue, then categorize it as Other.
+        The key issues are:
+        Economy,
+        Healthcare,
+        Education,
+        Immigration,
+        Environment,
+        National Security,
+        Criminal Justice,
+        Social Justice and Civil Rights,
+        Tax Policy,
+        Gun Control,
+        Infrastructure,
+        Public Safety,
+        Foreign Policy,
+        Housing,
+        Social Welfare Programs,
+        Drug Policy,
+        Veterans Affairs,
+        Technology and Privacy,
+        Election Integrity,
+        Reproductive Rights,
+        Gender,
+        Religious Freedom
+        
+        """
+        }]
+    prompts.append({"role": "user", "content": question})
+    answer = openai.chat.completions.create(
+                model="gpt-4o-mini",
+                max_tokens=20,
+                messages=prompts,
+                temperature=0
+            )
+    
+    category = answer.choices[0].message.content.strip()
+    return category
+
+def categorize_all_questions():
+    connection = get_database_connection()
+
+    # get the questions from the db which have not been categorized yet
+    query = '''
+    select id as query_id, query
+    from Query
+    where category is null
+    '''
+    questions = pd.read_sql_query(query, connection)
+
+    # categorize the questions
+    questions['category'] = questions['query'].apply(categorize_question)
+    df_dict = questions.to_dict('records')
+
+    # update those rows with their category
+    metadata = sqlalchemy.MetaData()
+    query_table = sqlalchemy.Table('Query', metadata,
+        Column("id", Integer, primary_key=True),
+        Column("query", String),
+        Column("category", String),
+    )
+    stmt = (
+        update(query_table)
+        .where(query_table.c.id == bindparam("query_id"))
+        .values(category=bindparam("category"))
+    )
+    with connection.begin() as conn:
+        conn.execute(
+            stmt,
+            df_dict,
+        )
+    print(stmt)
+
