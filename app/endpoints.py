@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
-from utils import (  # Import from utils.py specifically
+from app.utils import (  # Import from utils.py specifically
     insert_into_database,
     select_from_database,
     generate_response,
