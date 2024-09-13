@@ -30,7 +30,7 @@ class SaveRequest(BaseModel):
     filenames: List[str]
     user_voted: int
     contexts: List[str]
-    answer_relevancy_score: float
+    answer_relevancy: float
     faithfulness_score: float
 
 # Endpoint to receive user query and generate a response
