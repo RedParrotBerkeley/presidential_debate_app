@@ -9,6 +9,7 @@ import tiktoken  # OpenAI's tokenizer
 import pandas as pd
 from dotenv import load_dotenv
 import mysql.connector
+from mysql.connector import Error
 from datasets import Dataset 
 from ragas.metrics import faithfulness, answer_relevancy
 from ragas import evaluate
