@@ -50,13 +50,20 @@ model = 'gpt-4o-mini'
 
 # Function to create a database connection using MySQL Connector
 def get_database_connection():
-    return mysql.connector.connect(
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        host=MYSQL_HOST,
-        port=MYSQL_PORT,
-        database=MYSQL_DATABASE
-    )
+    try:
+        print(f"Connecting to database: {MYSQL_DATABASE}")  # Debugging statement
+        connection = mysql.connector.connect(
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            host=MYSQL_HOST,
+            port=MYSQL_PORT,
+            database=MYSQL_DATABASE
+        )
+        return connection
+    except Error as e:
+        print(f"Error while connecting to MySQL: {e}")
+        raise e
+
 
 # Function to create a database connection using SQLAlchemy
 def get_database_engine():
