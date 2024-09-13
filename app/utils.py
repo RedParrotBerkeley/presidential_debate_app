@@ -59,34 +59,53 @@ def get_database_connection():
 
 # Function to create a database connection using SQLAlchemy
 def get_database_engine():
-    engine = sqlalchemy.create_engine(f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}')
-    return engine
+    try:
+        engine = create_engine(f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}')
+        return engine
+    except Exception as e:
+        print(f"Error creating SQLAlchemy engine: {e}")
+        raise e
 
-# Function to execute an insert query in the database
 def insert_into_database(sql_string, vals):
-    print(sql_string)
-    connection = get_database_connection()
-    cursor = connection.cursor()
-    
-    # Ensure correct number of parameters for the SQL insert
-    if 'INSERT INTO Query' in sql_string:
-        # Make sure vals has the exact number of parameters that matches the SQL
-        if len(vals) == 2:
-            vals = (vals[0], vals[1], datetime.now())  # Add current timestamp
-    
-    cursor.execute(sql_string, vals)
-    connection.commit()
-    print(cursor.rowcount, "record inserted.")
-    connection.close()
+    print(f"Executing SQL: {sql_string} with values {vals}")  # Debugging
+    try:
+        connection = get_database_connection()
+        cursor = connection.cursor()
 
-# Function to execute a select query in the database
+        # Ensure correct number of parameters for the SQL insert
+        if 'INSERT INTO Query' in sql_string:
+            # Make sure vals has the exact number of parameters that matches the SQL
+            if len(vals) == 2:
+                vals = (vals[0], vals[1], datetime.now())  # Add current timestamp
+
+        cursor.execute(sql_string, vals)
+        connection.commit()
+        print(cursor.rowcount, "record inserted.")
+        
+    except Error as e:
+        print(f"Error executing insert: {e}")
+        raise e
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 def select_from_database(sql_string):
-    connection = get_database_connection()
-    cursor = connection.cursor()
-    cursor.execute(sql_string)
-    records = cursor.fetchall()
-    connection.close()
-    return records
+    try:
+        connection = get_database_connection()
+        cursor = connection.cursor()
+        cursor.execute(sql_string)
+        records = cursor.fetchall()
+        return records
+    except Error as e:
+        print(f"Error executing select: {e}")
+        raise e
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 # Function to estimate the token length of text using OpenAI's tokenizer
 def estimate_tokens(text, model_name=model):
