@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 # Load environment variables from the .env file located in the /app directory
-load_dotenv(dotenv_path="/app/.env")
+#load_dotenv(dotenv_path="/app/.env")
 
 # Access the API key from environment variables
 openai_api_key = os.getenv("OPENAI_API_KEY")
