@@ -22,8 +22,8 @@ from openai import OpenAI
 client = openai.OpenAI()
 
 # Correctly load the .env file
-dotenv_path = r"C:\Users\Patra\OneDrive\Documents\GitHub\debate_bot\app\.env"
-load_dotenv(dotenv_path=dotenv_path)
+#dotenv_path = r"C:\Users\Patra\OneDrive\Documents\GitHub\debate_bot\app\.env"
+#load_dotenv(dotenv_path=dotenv_path)
 
 # Get API key from environment and debug print to check if API key is loaded
 api_key = os.getenv("OPENAI_API_KEY")
