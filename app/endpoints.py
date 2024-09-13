@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any
 from app.utils import (  # Import from utils.py specifically
     insert_into_database,
     select_from_database,
@@ -18,9 +18,9 @@ router = APIRouter()
 class QueryRequest(BaseModel):
     query: str
 
-class ResponseData(BaseModel):
-    response: str
-    source_url: str
+class ResponseModel(BaseModel):
+    query_id: int
+    responses: Dict[str, Dict[str, str]]
 
 class SaveRequest(BaseModel):
     query_id: int
@@ -33,10 +33,10 @@ class SaveRequest(BaseModel):
     faithfulness_score: float
 
 # Endpoint to receive user query and generate a response
-@router.post("/generate-response/", response_model=List[ResponseData])
+@router.post("/generate-response/", response_model=ResponseModel)
 async def generate_response_endpoint(request: QueryRequest):
     try:
-        # Extract query from request - return response include query ID instead of array maybe put dictionary?
+        # Extract query from request
         query = request.query
 
         # Insert user query into the database
@@ -48,7 +48,6 @@ async def generate_response_endpoint(request: QueryRequest):
 
         # Generate embedding for the user's query
         query_embedding = get_openai_embedding(query)
-
         if query_embedding is None:
             raise HTTPException(status_code=500, detail="Failed to generate query embedding.")
 
@@ -65,9 +64,6 @@ async def generate_response_endpoint(request: QueryRequest):
         # Generate a response for Reichert
         best_response_reichert = generate_response(query, best_retrieved_texts_reichert) if best_retrieved_texts_reichert else "No suitable chunk found for Reichert."
 
-        # Print formatted response for Reichert
-        print(f"Response for Reichert: {best_response_reichert}\nSource URL: {source_url_reichert}")
-
         # Retrieve texts for Ferguson
         best_texts_df_ferguson = find_best_texts(
             query_embedding,
@@ -81,23 +77,23 @@ async def generate_response_endpoint(request: QueryRequest):
         # Generate a response for Ferguson
         best_response_ferguson = generate_response(query, best_retrieved_texts_ferguson) if best_retrieved_texts_ferguson else "No suitable chunk found for Ferguson."
 
-        # Print formatted response for Ferguson
-        print(f"Response for Ferguson: {best_response_ferguson}\nSource URL: {source_url_ferguson}")
-
-        # Return response as a dictionary
-        return {
+        # Prepare the dictionary response
+        response_data_dict = {
             "query_id": query_id,
             "responses": {
                 "reichert": {
                     "response": best_response_reichert,
-                    "source_url": source_url_reichert
+                    "source_url": source_url_reichert,
                 },
                 "ferguson": {
                     "response": best_response_ferguson,
-                    "source_url": source_url_ferguson
+                    "source_url": source_url_ferguson,
                 }
             }
         }
+
+        # Return the dictionary as the response
+        return response_data_dict
 
     except Exception as e:
         # Improved exception handling
