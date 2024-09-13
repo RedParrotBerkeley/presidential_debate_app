@@ -48,6 +48,11 @@ MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 # Model to use for chat completions
 model = 'gpt-4o-mini'
 
+# Debugging: Print environment variable values
+print(f"MySQL User: {MYSQL_USER}")
+print(f"MySQL Host: {MYSQL_HOST}")
+print(f"MySQL Database: {MYSQL_DATABASE}")
+
 # Function to create a database connection using MySQL Connector
 def get_database_connection():
     try:
