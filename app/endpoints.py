@@ -55,7 +55,7 @@ async def generate_response_endpoint(request: QueryRequest):
         # Retrieve texts for Reichert
         best_texts_df_reichert = find_best_texts(
             query_embedding,
-            ['data/embeddings/vectorized_chunks_reichert.pkl'],  # List of .pkl filenames
+            ['app/data/embeddings/vectorized_chunks_reichert.pkl'],  # List of .pkl filenames
             'sources/reichert',  # Folder path for .txt files
             4  # Number of best texts to retrieve
         )
@@ -71,7 +71,7 @@ async def generate_response_endpoint(request: QueryRequest):
         # Retrieve texts for Ferguson
         best_texts_df_ferguson = find_best_texts(
             query_embedding,
-            ['data/embeddings/vectorized_chunks_ferguson.pkl'],  # List of .pkl filenames
+            ['app/data/embeddings/vectorized_chunks_ferguson.pkl'],  # List of .pkl filenames
             'sources/ferguson',  # Folder path for .txt files
             4  # Number of best texts to retrieve
         )
