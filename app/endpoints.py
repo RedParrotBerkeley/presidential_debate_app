@@ -26,9 +26,10 @@ class SaveRequest(BaseModel):
     query_id: int
     candidate_id: int
     response: str
-    contexts: List[str]
+    retrieved_text: List[str]
     filenames: List[str]
     user_voted: int
+    contexts: List[str]
     answer_relevancy_score: float
     faithfulness_score: float
 
