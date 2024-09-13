@@ -31,7 +31,7 @@ class SaveRequest(BaseModel):
     user_voted: int
     contexts: List[str]
     answer_relevancy: float
-    faithfulness_score: float
+    faithfulness: float
 
 # Endpoint to receive user query and generate a response
 @router.post("/generate-response/", response_model=ResponseModel)
