@@ -108,12 +108,12 @@ async def generate_response_endpoint(request: QueryRequest):
 @router.post("/save-response/")
 async def save_response(request: SaveRequest):
     try:
-        # Save data to the database
+        # Convert request to dictionary and save data to the database
         data = request.dict()
         save_to_db(data)
         return {"status": "Success", "message": "Data saved successfully."}
-
     except Exception as e:
+        print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
