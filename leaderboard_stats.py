@@ -186,3 +186,52 @@ def get_top_categories(n):
     print(top_categories)
     return top_categories
 
+
+def get_participant_parties():
+    """
+    This gets the parties and percent of participants who said they were affiliated with each.
+
+    Args:
+        none
+
+    Returns:
+        dict, {"republican": int, "democrat": int, "other": int, "independent": int, "prefer_not_to_say": int}
+    """
+    connection = get_database_connection()
+    query = '''
+        select partyName, count(1) as n 
+        from Session s join Party p on s.partyId = p.id
+        group by partyName
+        '''
+    df = pd.read_sql_query(query, connection)
+    connection.close()
+    total_count = df.n.sum()
+    republican_count = df.loc[df['partyName'] == "Republican"]
+    republican_count = republican_count.n.sum()
+    republican_percent = republican_count/total_count
+
+    democrat_count = df.loc[df['partyName'] == "Democrat"]
+    democrat_count = democrat_count.n.sum()
+    democrat_percent = democrat_count/total_count
+
+    independent_count = df.loc[df['partyName'] == "Independent"]
+    independent_count = independent_count.n.sum()
+    independent_percent = independent_count/total_count
+
+    other_count = df.loc[df['partyName'] == "Other"]
+    other_count = other_count.n.sum()
+    other_percent = other_count/total_count
+
+    nosay_count = df.loc[df['partyName'] == "Prefer Not To Say"]
+    nosay_count = nosay_count.n.sum()
+    nosay_percent = nosay_count/total_count
+
+    result = {"republican": republican_percent,
+        "democrat": democrat_percent,
+        "other": other_percent,
+        "independent": independent_percent,
+        "prefer_not_to_say": nosay_percent}
+    print(result)
+    return result
+
+get_participant_parties()

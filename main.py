@@ -236,7 +236,7 @@ async def query_handler(request: QueryRequest):
 async def stats_handler():
     candidate_win_counts = ls.get_winner_counts()
     # participant demographics placeholder
-    participant_party = {"republican": 1, "democrat": 1, "no_affliation": 1, "prefer_not_to_say": 1}
+    participant_party = ls.get_participant_parties()
     # by age range
     participant_age = {"18-35": 1, "36-55": 1, "56-75": 1, "76+": 1}
     # by gender
