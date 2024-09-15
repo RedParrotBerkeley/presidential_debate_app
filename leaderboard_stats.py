@@ -24,7 +24,8 @@ MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 openai.api_key = OPENAI_API_KEY
-
+engine = sqlalchemy.create_engine(f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}')
+    
 def get_database_connection():
     """
     This gets a connection to the HRF debate bot mysql database using SQLAlchemy
@@ -35,8 +36,8 @@ def get_database_connection():
         sqlalchemy connection object
 
     """
-    engine = sqlalchemy.create_engine(f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}')
-    return engine
+    connection = engine.connect()
+    return connection
 
 def get_winner_counts():
     """
@@ -58,6 +59,7 @@ def get_winner_counts():
     from Response r join Query q on r.queryId = q.id 
     '''
     df = pd.read_sql_query(query, connection)
+    connection.close()
     votes_per_candidate_per_session = df.groupby(['sessionId', 'candidateId']).sum('userVoted').reset_index().pivot(index='sessionId', columns='candidateId', values='userVoted')
     print(votes_per_candidate_per_session)
     winner_per_session = votes_per_candidate_per_session
@@ -94,7 +96,7 @@ def categorize_question(question):
         Environment,
         National Security,
         Criminal Justice,
-        Social Justice and Civil Rights,
+        Social Justice,
         Tax Policy,
         Gun Control,
         Infrastructure,
@@ -156,4 +158,31 @@ def categorize_all_questions():
             df_dict,
         )
     print(stmt)
+
+def get_top_categories(n):
+    """
+    This gets the names and counts of the top n most asked categories of questions.
+
+    Args:
+        n (int): the number of categories to get
+
+    Returns:
+        list of tuples, e.g. [("Economy", 9),
+                                ("Healthcare", 8),
+                                ("Education", 7),
+                                ("Immigration", 6)]
+    """
+    connection = get_database_connection()
+    query = '''
+    select category, count(1) as n
+    from Query
+    group by category
+    order by count(1) desc
+    '''
+    df = pd.read_sql_query(query, connection)
+    connection.close()
+    top_n = df.head(n)
+    top_categories = list(top_n.itertuples(index=False, name=None))
+    print(top_categories)
+    return top_categories
 

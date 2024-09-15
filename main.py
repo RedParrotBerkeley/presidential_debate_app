@@ -242,16 +242,7 @@ async def stats_handler():
     # by gender
     participant_gender = {"male": 1, "female": 1, "nonbinary": 1, "prefer_not_to_say": 1}
     # top categories asked about
-    top_categories = [("Economy", 9),
-    ("Healthcare", 8),
-    ("Education", 7),
-    ("Immigration", 6),
-    ("Environment",5),
-    ("Gun Control", 4),
-    ("Infrastructure", 3),
-    ("Foreign Policy", 2),
-    ("Housing", 1),
-    ("Social Welfare Programs",1)]
+    top_categories = ls.get_top_categories(10)
     response = json.dumps({"candidate_win_counts": candidate_win_counts, 
         "participant_party": participant_party,
         "participant_age":participant_age,
