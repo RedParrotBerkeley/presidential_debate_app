@@ -234,4 +234,47 @@ def get_participant_parties():
     print(result)
     return result
 
-get_participant_parties()
+
+def get_participant_genders():
+    """
+    This gets the genders and percent of participants who said they identify with each.
+
+    Args:
+        none
+
+    Returns:
+        dict, {"male": int, "female": int, "nonbinary": int, "prefer_not_to_say": int}
+    """
+    connection = get_database_connection()
+    query = '''
+        select genderIdentity, count(1) as n 
+        from Session
+        group by genderIdentity
+        '''
+    df = pd.read_sql_query(query, connection)
+    connection.close()
+    total_count = df.n.sum()
+    male_count = df.loc[df['genderIdentity'] == "male"]
+    male_count = male_count.n.sum()
+    male_percent = male_count/total_count
+
+    female_count = df.loc[df['genderIdentity'] == "female"]
+    female_count = female_count.n.sum()
+    female_percent = female_count/total_count
+
+    nonbinary_count = df.loc[df['genderIdentity'] == "Non-Binary"]
+    nonbinary_count = nonbinary_count.n.sum()
+    nonbinary_percent = nonbinary_count/total_count
+
+    nosay_count = df.loc[df['genderIdentity'] == "Prefer Not To Say"]
+    nosay_count = nosay_count.n.sum()
+    nosay_percent = nosay_count/total_count
+
+    result = {"male": male_percent,
+        "demofemalecrat": female_percent,
+        "nonbinary": nonbinary_percent,
+        "prefer_not_to_say": nosay_percent}
+    print(result)
+    return result
+
+get_participant_genders()
