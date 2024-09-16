@@ -33,7 +33,7 @@ class SaveRequest(BaseModel):
     answer_relevancy: float
     faithfulness: float
 
-# Endpoint to receive user query and generate a response
+# Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
 async def generate_response_endpoint(request: QueryRequest):
     try:
@@ -93,6 +93,31 @@ async def generate_response_endpoint(request: QueryRequest):
             }
         }
 
+        # Save response to the database
+        save_to_db({
+            "query_id": query_id,
+            "candidate_id": 1,  # Assuming "1" represents Reichert
+            "response": best_response_reichert,
+            "retrieved_text": best_retrieved_texts_reichert,
+            "filenames": [txt for txt in best_texts_df_reichert["filenames"].tolist()],
+            "user_voted": 0,  # Assuming a placeholder value for user voted
+            "contexts": best_retrieved_texts_reichert,
+            "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
+            "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
+        })
+
+        save_to_db({
+            "query_id": query_id,
+            "candidate_id": 2,  # Assuming "2" represents Ferguson
+            "response": best_response_ferguson,
+            "retrieved_text": best_retrieved_texts_ferguson,
+            "filenames": [txt for txt in best_texts_df_ferguson["filenames"].tolist()],
+            "user_voted": 0,  # Assuming a placeholder value for user voted
+            "contexts": best_retrieved_texts_ferguson,
+            "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
+            "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
+        })
+
         # Return the dictionary as the response
         return response_data_dict
 
@@ -103,18 +128,5 @@ async def generate_response_endpoint(request: QueryRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing your request. Please try again later."
         )
-
-# Endpoint to save response data to the database
-@router.post("/save-response/")
-async def save_response(request: SaveRequest):
-    try:
-        # Convert request to dictionary and save data to the database
-        data = request.dict()
-        save_to_db(data)
-        return {"status": "Success", "message": "Data saved successfully."}
-    except Exception as e:
-        print(f"Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 
