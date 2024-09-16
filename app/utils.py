@@ -182,7 +182,7 @@ def save_to_csv(data, filename='chatbot_data.tsv'):
 def save_to_db(data):
     contexts = json.dumps(data['retrieved_text'])
     filenames = json.dumps(data['filenames'])
-    vals = (data['query_id'], data['candidate_id'], data['response'], contexts, filenames, None, float(data['answer_relevancy']), float(data['faithfulness'])) #TODO fill in candidate and vote
+    vals = (data['query_id'], data['candidate_id'], data['response'], contexts, filenames, 0, float(data['answer_relevancy']), float(data['faithfulness'])) #TODO fill in vote
     insert_into_database(f"INSERT INTO Response (queryId, candidateId, response, contexts, filenames, userVoted, answerRelevancyScore, faithfulnessScore) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", vals)
 
 # Function to generate OpenAI embeddings for a given text
