@@ -29,6 +29,49 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 openai.api_key = OPENAI_API_KEY
 
+def categorize_question(question):
+    prompts=[{"role": "system", "content": 
+        """
+        You are a political scientist at a national newspaper. 
+        Categorize the next statements to their most relevant political key issue.
+        If the statement is not similar to any key issue, then categorize it as Other.
+        The key issues are:
+        Economy,
+        Healthcare,
+        Education,
+        Immigration,
+        Environment,
+        National Security,
+        Criminal Justice,
+        Social Justice and Civil Rights,
+        Tax Policy,
+        Gun Control,
+        Infrastructure,
+        Public Safety,
+        Foreign Policy,
+        Housing,
+        Social Welfare Programs,
+        Drug Policy,
+        Veterans Affairs,
+        Technology and Privacy,
+        Election Integrity,
+        Reproductive Rights,
+        Gender,
+        Religious Freedom
+        
+        """
+        }]
+    prompts.append({"role": "user", "content": question})
+    answer = openai.chat.completions.create(
+                model="gpt-4o-mini",
+                max_tokens=20,
+                messages=prompts,
+                temperature=0
+            )
+    
+    category = answer.choices[0].message.content.strip()
+    return category
+
 def get_scoring_metrics(query, response, contexts):
     """
     This is an example of Google style.
@@ -143,7 +186,7 @@ def save_to_csv(data, filename='chatbot_data.tsv'):
 def save_to_db(data):
     contexts = json.dumps(data['retrieved_text'])
     filenames = json.dumps(data['filenames'])
-    vals = (data['query_id'], 1, data['response'], contexts, filenames, 0, float(data['answer_relevancy']), float(data['faithfulness'])) #TODO fill in candidate and vote
+    vals = (data['query_id'], data['candidate_id'], data['response'], contexts, filenames, 0, float(data['answer_relevancy']), float(data['faithfulness'])) #TODO fill in vote
     insert_into_database(f"INSERT INTO Response (queryId, candidateId, response, contexts, filenames, userVoted, answerRelevancyScore, faithfulnessScore) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", vals)
 
 def truncate_text_to_fit(text, max_tokens):
@@ -259,8 +302,9 @@ def chatbot_with_prevectorized_chunks():
         if query.lower() in ['exit', 'quit']:
             break
 
-        vals = (session_id, query, datetime.now())
-        insert_into_database(f"INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
+        question_category = categorize_question(query)
+        vals = (session_id, query, datetime.now(), question_category)
+        insert_into_database(f"INSERT INTO Query (sessionId, query, timestamp, category) VALUES (%s, %s, %s, %s)", vals)
         
         query_id, query = get_last_query_from_db()
 
