@@ -331,7 +331,29 @@ Stay informed about the latest changes and improvements to the project. Below yo
 >    git checkout branch-name
 >    ```
 > 2. Ensure `.env` is placed in the same directory.
+>    
+> 3. Download the appropriate docker desktop from https://www.docker.com/products/docker-desktop/ for Windows navigate to https://docs.docker.com/desktop/install/windows-install/
+>    
+> 4. Build the Docker image:
+> 
+>    ```bash
+>    docker build -t debate-bot .
+>    ```
+> 
+> 5. Run the Docker container interactively:
+>  Replace port mapping
+>    ```bash
+>    docker run -d -p 8080:8080 --env-file .env -it debate-bot
+>    ```
+> 
+---
+> ## 09/08/2024
 >
+> #### Add candidate win counts:
+> - Added the `leaderboard_stats.py` file to hold functions related to getting stats for the leaderboard page
+> - Added `get_winner_counts()` to get count of each candidate's wins
+> - added a handler `stats_handler()` in `main.py` to provide the api the json structure with placeholder values  
+>>>>>>> develop 
 
 
 

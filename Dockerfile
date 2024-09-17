@@ -1,5 +1,5 @@
 # Use the official Python base image
-FROM python:3.12
+FROM python:3.12-slim-bookworm
 
 # Set environment variables to ensure real-time logs (output is not buffered)
 ENV PYTHONUNBUFFERED=1
@@ -16,20 +16,16 @@ COPY requirements.txt .
 # Install Python dependencies specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code to the working directory
-COPY . .
+# Copy only the app directory into the container at /app
+COPY app/ ./app/
 
-# Copy the entrypoint script explicitly to /app
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+# Copy README.md for documentation purposes
+COPY README.md .
 
-# Make the entrypoint script executable
-RUN chmod +x /app/docker-entrypoint.sh
+EXPOSE 8080
 
-# Use the shell script as the container entrypoint
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
 
-# Expose port if your application needs it (change 8080 to your desired port)
-# EXPOSE 8080 change this when FastAPI is set up - not needed now
 
 # run the following after building
 # docker run --env-file .env my-python-app
