@@ -78,6 +78,14 @@ async def generate_response_endpoint(request: QueryRequest):
         # Generate a response for Ferguson
         best_response_ferguson = generate_response(query, best_retrieved_texts_ferguson) if best_retrieved_texts_ferguson else "No suitable chunk found for Ferguson."
 
+       #flag non-answers from candidates
+        if "I do not have" in best_response_reichert.lower() or "i do not have" in best_response_ferguson.lower():
+            flag = {
+                "query_id": query_id,
+                "message": "One or both of these candidates have not discussed this topic, therefore we are unable to provide an answer at this time."
+            }
+            return JSONResponse(content=flag)
+        
         # Prepare the dictionary response
         response_data_dict = {
             "query_id": query_id,
