@@ -1,14 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any
-from app.utils import (  # Import from utils.py specifically
-    insert_into_database,
-    select_from_database,
-    generate_response,
-    get_openai_embedding,
-    find_best_texts,
-    save_to_db,
-)
+from app.utils import *  # Import from utils.py specifically
 from datetime import datetime 
 
 # Initialize FastAPI router
@@ -40,9 +33,12 @@ async def generate_response_endpoint(request: QueryRequest):
         # Extract query from request
         query = request.query
 
+        # Categorize the question
+        question_category = categorize_question(query)
+
         # Insert user query into the database
-        vals = (0, query, datetime.now())  # Use appropriate session_id (replace 0)
-        insert_into_database("INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
+        vals = (0, query, datetime.now(), question_category)  # Use appropriate session_id (replace 0)
+        insert_into_database("INSERT INTO Query (sessionId, query, timestamp, category) VALUES (%s, %s, %s, %s)", vals)
 
         # Retrieve the last query from the database
         query_id, query = select_from_database("SELECT id, query FROM Query ORDER BY id DESC LIMIT 1")[0]
@@ -129,4 +125,22 @@ async def generate_response_endpoint(request: QueryRequest):
             detail="An error occurred while processing your request. Please try again later."
         )
 
+@router.get("/stats")
+async def stats_handler():
+    candidate_wins = get_winner_percents()
+    # participant demographics placeholder
+    participant_party = get_participant_parties()
+    # by age range
+    participant_age = get_participant_ages()
+    # by gender
+    participant_gender = get_participant_genders()
+    # top categories asked about
+    top_categories = get_top_categories(10)
+    response = json.dumps({"candidate_wins": candidate_wins, 
+        "participant_party": participant_party,
+        "participant_age":participant_age,
+        "participant_gender":participant_gender,
+        "top_categories": top_categories
+    })
+    return response
 
