@@ -352,8 +352,27 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > #### Add candidate win counts:
 > - Added the `leaderboard_stats.py` file to hold functions related to getting stats for the leaderboard page
 > - Added `get_winner_counts()` to get count of each candidate's wins
-> - added a handler `stats_handler()` in `main.py` to provide the api the json structure with placeholder values  
->>>>>>> develop 
+> - added a handler `stats_handler()` in `main.py` to provide the api the json structure with placeholder values
+>
+---
+> ## 09/18/2024
+>
+> #### Add Response Flag and Session IDs:
+> - Added Import Secrets
+> - Added Flag Response if both candidates cannot provide an answer
+> - Added  `router.get("/start-session/")`
+>
+>   JSON Payload
+>   response body 
+>   `{
+>      "messages": "Session Started"
+>      "session_id": "generated_session_token_here"
+>   }`
+>
+>   response header
+>   `Set-Cookie: session_id=generated_session_token_here; Path=/; HttpOnly`
+>      
+
 
 
 
