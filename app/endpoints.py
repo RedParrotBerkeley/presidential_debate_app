@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any
-from app.utils import (  # Import from utils.py specifically
+from fastapi import APIRouter, HTTPException, status, Request, Response
+from pydantic import BaseModel
+from typing import List, Dict
+import secrets
+from app.utils import (
     insert_into_database,
     select_from_database,
     generate_response,
@@ -9,7 +10,7 @@ from app.utils import (  # Import from utils.py specifically
     find_best_texts,
     save_to_db,
 )
-from datetime import datetime 
+from datetime import datetime
 
 # Initialize FastAPI router
 router = APIRouter()
@@ -33,15 +34,34 @@ class SaveRequest(BaseModel):
     answer_relevancy: float
     faithfulness: float
 
+# Start session endpoint
+@router.get("/start-session/")
+async def start_session(response: Response):
+    # Generate a session ID (or token)
+    session_token = secrets.token_hex(16)
+    
+    # Set the session ID in a cookie
+    response.set_cookie(key="session_id", value=session_token, httponly=True)
+    
+    # Optionally save session_token
+    return {"message": "Session started", "session_id": session_token}
+
 # Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
-async def generate_response_endpoint(request: QueryRequest):
+async def generate_response_endpoint(request: Request, req_body: QueryRequest):
     try:
-        # Extract query from request
-        query = request.query
+        # Extract session_id from cookies
+        session_id = request.cookies.get("session_id")
+        if not session_id:
+            raise HTTPException(status_code=400, detail="Session ID is missing")
 
+        # Extract query from the request body
+        query = req_body.query
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is missing")
+        
         # Insert user query into the database
-        vals = (0, query, datetime.now())  # Use appropriate session_id (replace 0)
+        vals = (session_id, query, datetime.now())  # Use session_id
         insert_into_database("INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
 
         # Retrieve the last query from the database
@@ -78,6 +98,14 @@ async def generate_response_endpoint(request: QueryRequest):
         # Generate a response for Ferguson
         best_response_ferguson = generate_response(query, best_retrieved_texts_ferguson) if best_retrieved_texts_ferguson else "No suitable chunk found for Ferguson."
 
+        # Flag non-answers from candidates
+        if "I do not have" in best_response_reichert.lower() or "i do not have" in best_response_ferguson.lower():
+            flag = {
+                "query_id": query_id,
+                "message": "One or both of these candidates have not discussed this topic, therefore we are unable to provide an answer at this time."
+            }
+            return JSONResponse(content=flag)
+        
         # Prepare the dictionary response
         response_data_dict = {
             "query_id": query_id,
@@ -100,7 +128,7 @@ async def generate_response_endpoint(request: QueryRequest):
             "response": best_response_reichert,
             "retrieved_text": best_retrieved_texts_reichert,
             "filenames": [txt for txt in best_texts_df_reichert["filenames"].tolist()],
-            "user_voted": 0,  # Assuming a placeholder value for user voted
+            "user_voted": 0,  # Placeholder value for user voted
             "contexts": best_retrieved_texts_reichert,
             "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
             "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
@@ -112,7 +140,7 @@ async def generate_response_endpoint(request: QueryRequest):
             "response": best_response_ferguson,
             "retrieved_text": best_retrieved_texts_ferguson,
             "filenames": [txt for txt in best_texts_df_ferguson["filenames"].tolist()],
-            "user_voted": 0,  # Assuming a placeholder value for user voted
+            "user_voted": 0,  # Placeholder value for user voted
             "contexts": best_retrieved_texts_ferguson,
             "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
             "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
@@ -128,5 +156,3 @@ async def generate_response_endpoint(request: QueryRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing your request. Please try again later."
         )
-
-
