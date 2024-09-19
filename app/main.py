@@ -25,11 +25,16 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://debatebot-client.vercel.app"],
+    allow_origins=[
+        "http://localhost:3000",  # For local development
+        "https://debatebot-client.vercel.app",  # FE
+        "https://starfish-app-nm2zl.ondigitalocean.app",  # BE
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Include the router from endpoints
 app.include_router(router)
 
