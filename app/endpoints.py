@@ -1,5 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, status, Request, Response
-from fastapi.middleware.cors import CORSMiddleware  # CORS middleware
+from fastapi import APIRouter, HTTPException, status, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
 import secrets
@@ -12,18 +12,6 @@ from app.utils import (
     save_to_db,
 )
 from datetime import datetime
-
-# Initialize FastAPI app
-app = FastAPI()
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://debatebot-client.vercel.app"],  
-    allow_credentials=True,  # Allow cookies to be sent
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Initialize FastAPI router
 router = APIRouter()
@@ -46,9 +34,6 @@ class SaveRequest(BaseModel):
     contexts: List[str]
     answer_relevancy: float
     faithfulness: float
-
-# Attach router to the app
-app.include_router(router)
 
 # Start session endpoint
 @router.get("/start-session/")
