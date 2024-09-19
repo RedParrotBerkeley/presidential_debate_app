@@ -164,9 +164,9 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         return response_data_dict
 
     except Exception as e:
-    print(f"An error occurred: {str(e)}")
-    print(traceback.format_exc())  # This will print the full traceback for better debugging
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"An error occurred while processing your request. {str(e)}"
-    )
+        print(f"An error occurred: {str(e)}")
+        print(traceback.format_exc())  # This will print the full traceback for better debugging
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred while processing your request. {str(e)}"
+        )
