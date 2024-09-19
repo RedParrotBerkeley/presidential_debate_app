@@ -62,16 +62,17 @@ async def start_session(response: Response, request: Request):
 # Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
 async def generate_response_endpoint(request: Request, req_body: QueryRequest):
+    # Extract session_id from cookies
     session_id = request.cookies.get("session_id")
     if not session_id:
         print("No session ID found in cookies")
         raise HTTPException(status_code=400, detail="Session ID is missing")
     print(f"Session ID received: {session_id}")
 
-        # Extract query from the request body
-        query = req_body.query
-        if not query:
-            raise HTTPException(status_code=400, detail="Query is missing")
+    # Extract query from the request body
+    query = req_body.query
+    if not query:
+        raise HTTPException(status_code=400, detail="Query is missing")
         
         # Insert user query into the database
         vals = (session_id, query, datetime.now())  # Use session_id
