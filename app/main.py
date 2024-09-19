@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 from app.endpoints import router  # Ensure this import points to your endpoints file
 from app.utils import (
     insert_into_database,
@@ -21,6 +22,14 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # Initialize FastAPI app
 app = FastAPI()
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "https://debatebot-client.vercel.app/"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Include the router from endpoints
 app.include_router(router)
 
