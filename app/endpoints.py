@@ -20,6 +20,7 @@ router = APIRouter()
 # Pydantic models for request and response validation
 class QueryRequest(BaseModel):
     query: str
+    session_id: str
 
 class ResponseModel(BaseModel):
     query_id: int
