@@ -12,6 +12,9 @@ from app.utils import (
 )
 from datetime import datetime
 
+# Initialize FastAPI app
+app = FastAPI()
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
