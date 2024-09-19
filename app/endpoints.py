@@ -70,7 +70,9 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         print("Request base URL", request.base_url)
         print("Request headers:", request.headers)
         print("Request url:", request.url)
-        session_id = request.cookies.get("session_id")
+        # commented out for now
+        # session_id = request.cookies.get("session_id")
+        session_id = req_body.session_id
         if not session_id:
             print("No session ID found in cookies")
             raise HTTPException(status_code=400, detail="Session ID is missing")
