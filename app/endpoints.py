@@ -67,6 +67,8 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
     try:
         # Extract session_id from cookies
         print("Request cookies:", request.cookies)
+        print("Request headers:", request.headers)
+        print("Request url:", request.url)
         session_id = request.cookies.get("session_id")
         if not session_id:
             print("No session ID found in cookies")
