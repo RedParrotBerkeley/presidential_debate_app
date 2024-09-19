@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status, Request, Response
+from fastapi import FastAPI, APIRouter, HTTPException, status, Request, Response
+from fastapi.middleware.cors import CORSMiddleware  # CORS middleware
 from pydantic import BaseModel
 from typing import List, Dict
 import secrets
