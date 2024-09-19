@@ -53,7 +53,7 @@ async def start_session(response: Response):
     session_token = secrets.token_hex(16)
     
     # Set the session ID in a cookie
-    response.set_cookie(key="session_id", value=session_token, httponly=True)
+    response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
     
     # Optionally save session_token
     return {"message": "Session started", "session_id": session_token}
