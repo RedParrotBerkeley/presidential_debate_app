@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import traceback
 from typing import List, Dict
 import secrets
 from app.utils import (
@@ -62,11 +62,11 @@ async def start_session(response: Response, request: Request):
 # Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
 async def generate_response_endpoint(request: Request, req_body: QueryRequest):
-    try:
-        # Extract session_id from cookies
-        session_id = request.cookies.get("session_id")
-        if not session_id:
-            raise HTTPException(status_code=400, detail="Session ID is missing")
+    session_id = request.cookies.get("session_id")
+    if not session_id:
+        print("No session ID found in cookies")
+        raise HTTPException(status_code=400, detail="Session ID is missing")
+    print(f"Session ID received: {session_id}")
 
         # Extract query from the request body
         query = req_body.query
@@ -112,7 +112,7 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         best_response_ferguson = generate_response(query, best_retrieved_texts_ferguson) if best_retrieved_texts_ferguson else "No suitable chunk found for Ferguson."
 
         # Flag non-answers from candidates
-        if "I do not have" in best_response_reichert.lower() or "i do not have" in best_response_ferguson.lower():
+        if "i do not have" in best_response_reichert.lower() or "i do not have" in best_response_ferguson.lower():
             flag = {
                 "query_id": query_id,
                 "message": "One or both of these candidates have not discussed this topic, therefore we are unable to provide an answer at this time."
@@ -163,9 +163,9 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         return response_data_dict
 
     except Exception as e:
-        # Improved exception handling
-        print(f"An error occurred: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing your request. Please try again later."
-        )
+    print(f"An error occurred: {str(e)}")
+    print(traceback.format_exc())  # This will print the full traceback for better debugging
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"An error occurred while processing your request. {str(e)}"
+    )
