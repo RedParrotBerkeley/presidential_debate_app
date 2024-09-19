@@ -12,6 +12,15 @@ from app.utils import (
 )
 from datetime import datetime
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "https://debatebot-client.vercel.app/"],  
+    allow_credentials=True,  # Allow cookies to be sent
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Initialize FastAPI router
 router = APIRouter()
 
@@ -33,6 +42,9 @@ class SaveRequest(BaseModel):
     contexts: List[str]
     answer_relevancy: float
     faithfulness: float
+
+# Attach router to the app
+app.include_router(router)
 
 # Start session endpoint
 @router.get("/start-session/")
