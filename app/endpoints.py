@@ -19,7 +19,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://debatebot-client.vercel.app/"],  
+    allow_origins=["http://localhost:3000", "https://debatebot-client.vercel.app"],  
     allow_credentials=True,  # Allow cookies to be sent
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,13 +52,25 @@ app.include_router(router)
 
 # Start session endpoint
 @router.get("/start-session/")
-async def start_session(response: Response):
+async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
     session_token = secrets.token_hex(16)
     
-    # Set the session ID in a cookie
-    response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
+    # # Set the session ID in a cookie
+    # response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
     
+     # Set 'secure' flag based on the request environment (True for HTTPS, False for localhost)
+    is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
+    
+    # Set the session ID in a cookie
+    response.set_cookie(
+        key="session_id",
+        value=session_token,
+        httponly=True,
+        secure=is_secure,  # Secure only for HTTPS
+        samesite='None'
+    )
+
     # Optionally save session_token
     return {"message": "Session started", "session_id": session_token}
 
