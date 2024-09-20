@@ -38,6 +38,7 @@ class SaveRequest(BaseModel):
     faithfulness: float
 
 # Start session endpoint
+
 @router.get("/start-session/")
 async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
@@ -47,22 +48,18 @@ async def start_session(response: Response, request: Request):
     # response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
     
      # Set 'secure' flag based on the request environment (True for HTTPS, False for localhost)
-    #is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
-    #print(f"Is secure: {is_secure}: {request.url}")
+    is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
+    print(f"Is secure: {is_secure}: {request.url}")
     
     # Set the session ID in a cookie
     response.set_cookie(
         key="session_id",
         value=session_token,
         httponly=True,
-        secure=True,  # Secure only for HTTPS
-        samesite='None',
-        domain="debatebot-client.vercel.app",
-        path="/"
-    
+        secure=is_secure,  # Secure only for HTTPS
+        samesite='None'
     )
 
-    # Optionally save session_token
     return {"message": "Session started", "session_id": session_token}
 
 # Endpoint to receive user query, generate a response, and save to database
