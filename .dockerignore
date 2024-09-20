@@ -6,4 +6,5 @@
 # Allow specific files and directories
 !app/
 !requirements.txt
+!nginx/
 !README.md
