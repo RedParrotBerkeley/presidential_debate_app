@@ -19,12 +19,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy only the app directory into the container at /app
 COPY app/ ./app/
 
+# Step 2: Nginx setup
+FROM nginx:latest
+
+# Copy Nginx configuration
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+
 # Copy README.md for documentation purposes
 COPY README.md .
 
 EXPOSE 8080
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["nginx", "-g", "daemon off;"]
 
 
 # run the following after building
