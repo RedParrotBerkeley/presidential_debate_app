@@ -26,10 +26,8 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # For local development
         "https://debatebot-client.vercel.app",  # FE
         "https://starfish-app-nm2zl.ondigitalocean.app",  # BE
-        "http://localhost"
     ],
     allow_credentials=True,
     allow_methods=["*"],
