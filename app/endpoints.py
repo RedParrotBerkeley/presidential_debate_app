@@ -57,7 +57,6 @@ async def start_session(response: Response, request: Request):
         httponly=True,
         secure=True,  # Secure only for HTTPS
         samesite='None',
-        domain=".ondigitalocean.app", 
         path="/"
     
     )
