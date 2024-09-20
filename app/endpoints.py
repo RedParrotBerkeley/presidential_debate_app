@@ -56,7 +56,10 @@ async def start_session(response: Response, request: Request):
         value=session_token,
         httponly=True,
         secure=True,  # Secure only for HTTPS
-        samesite='None'
+        samesite='None',
+        domain=None,
+        path="/"
+    
     )
 
     # Optionally save session_token
