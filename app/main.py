@@ -26,7 +26,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # For local development
+        "https://dbapi-stag.hrfinnovation.org/",  #staging
         "https://debatebot-client.vercel.app",  # FE
         "https://starfish-app-nm2zl.ondigitalocean.app",  # BE
         "http://localhost"
