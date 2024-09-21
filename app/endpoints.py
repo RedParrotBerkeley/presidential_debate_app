@@ -1,8 +1,18 @@
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any
-from app.utils import *  # Import from utils.py specifically
-from datetime import datetime 
+from fastapi import APIRouter, HTTPException, status, Request, Response
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+import traceback
+from typing import List, Dict
+import secrets
+from app.utils import (
+    insert_into_database,
+    select_from_database,
+    generate_response,
+    get_openai_embedding,
+    find_best_texts,
+    save_to_db,
+)
+from datetime import datetime
 
 # Initialize FastAPI router
 router = APIRouter()
@@ -10,6 +20,7 @@ router = APIRouter()
 # Pydantic models for request and response validation
 class QueryRequest(BaseModel):
     query: str
+    session_id: str
 
 class ResponseModel(BaseModel):
     query_id: int
@@ -25,6 +36,31 @@ class SaveRequest(BaseModel):
     contexts: List[str]
     answer_relevancy: float
     faithfulness: float
+
+# Start session endpoint
+@router.get("/start-session/")
+async def start_session(response: Response, request: Request):
+    # Generate a session ID (or token)
+    session_token = secrets.token_hex(16)
+    
+    # # Set the session ID in a cookie
+    # response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
+    
+     # Set 'secure' flag based on the request environment (True for HTTPS, False for localhost)
+    is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
+    print(f"Is secure: {is_secure}: {request.url}")
+    
+    # Set the session ID in a cookie
+    response.set_cookie(
+        key="session_id",
+        value=session_token,
+        httponly=True,
+        secure=is_secure,  # Secure only for HTTPS
+        samesite='None'
+    )
+
+    # Optionally save session_token
+    return {"message": "Session started", "session_id": session_token}
 
 # Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
