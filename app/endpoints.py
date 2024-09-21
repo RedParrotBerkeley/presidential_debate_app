@@ -48,15 +48,15 @@ async def start_session(response: Response, request: Request):
     # response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
     
      # Set 'secure' flag based on the request environment (True for HTTPS, False for localhost)
-    is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
-    print(f"Is secure: {is_secure}: {request.url}")
+    #is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
+    #print(f"Is secure: {is_secure}: {request.url}")
     
     # Set the session ID in a cookie
     response.set_cookie(
         key="session_id",
         value=session_token,
         httponly=True,
-        secure=is_secure,  # Secure only for HTTPS
+        secure=True,  # Secure only for HTTPS
         samesite='None'
     )
 
