@@ -11,7 +11,15 @@ from app.utils import (
     get_openai_embedding,
     find_best_texts,
     save_to_db,
-    categorize_question
+    categorize_question,
+    get_participant_parties,
+    get_participant_genders,
+    get_participant_ages,
+    get_top_categories,
+    get_winner_percents,
+    categorize_all_questions,
+    get_scoring_metrics,
+    get_sqlachemy_connection
 )
 from datetime import datetime
 
@@ -44,13 +52,7 @@ async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
     session_token = secrets.token_hex(16)
     
-    # # Set the session ID in a cookie
-    # response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
-    
-     # Set 'secure' flag based on the request environment (True for HTTPS, False for localhost)
-    #is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
-    #print(f"Is secure: {is_secure}: {request.url}")
-    
+   
     # Set the session ID in a cookie
     response.set_cookie(
         key="session_id",
