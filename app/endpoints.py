@@ -66,18 +66,31 @@ async def start_session(response: Response, request: Request):
     return {"message": "Session started", "session_id": session_token}
 
 # Endpoint to receive user query, generate a response, and save to database
+# Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
-async def generate_response_endpoint(request: QueryRequest):
+async def generate_response_endpoint(request: Request, req_body: QueryRequest):
     try:
-        # Extract query from request
-        query = request.query
+        # Extract session_id from cookies
+        print("Request cookies:", request.cookies)
+        print("Request base URL", request.base_url)
+        print("Request headers:", request.headers)
+        print("Request url:", request.url)
+        # commented out for now
+        # session_id = request.cookies.get("session_id")
+        session_id = req_body.session_id
+        if not session_id:
+            print("No session ID found in cookies")
+            raise HTTPException(status_code=400, detail="Session ID is missing")
+        print(f"Session ID received: {session_id}")
 
-        # Categorize the question
-        question_category = categorize_question(query)
-
+        # Extract query from the request body
+        query = req_body.query
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is missing")
+        
         # Insert user query into the database
-        vals = (0, query, datetime.now(), question_category)  # Use appropriate session_id (replace 0)
-        insert_into_database("INSERT INTO Query (sessionId, query, timestamp, category) VALUES (%s, %s, %s, %s)", vals)
+        vals = (session_id, query, datetime.now())  # Use session_id
+        insert_into_database("INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
 
         # Retrieve the last query from the database
         query_id, query = select_from_database("SELECT id, query FROM Query ORDER BY id DESC LIMIT 1")[0]
@@ -113,6 +126,14 @@ async def generate_response_endpoint(request: QueryRequest):
         # Generate a response for Ferguson
         best_response_ferguson = generate_response(query, best_retrieved_texts_ferguson) if best_retrieved_texts_ferguson else "No suitable chunk found for Ferguson."
 
+        # Flag non-answers from candidates
+        if "i do not have" in best_response_reichert.lower() or "i do not have" in best_response_ferguson.lower():
+            flag = {
+                "query_id": query_id,
+                "message": "One or both of these candidates have not discussed this topic, therefore we are unable to provide an answer at this time."
+            }
+            return JSONResponse(content=flag)
+        
         # Prepare the dictionary response
         response_data_dict = {
             "query_id": query_id,
