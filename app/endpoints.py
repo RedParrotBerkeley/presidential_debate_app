@@ -11,6 +11,7 @@ from app.utils import (
     get_openai_embedding,
     find_best_texts,
     save_to_db,
+    categorize_question
 )
 from datetime import datetime
 
