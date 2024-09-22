@@ -51,8 +51,21 @@ class SaveRequest(BaseModel):
 async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
     session_token = secrets.token_hex(16)
+
+    # Debug: Print generated session token
+    print(f"Generated session token: {session_token}")
     
+    # Debug: Print request scheme and host to ensure HTTPS is used
+    print(f"Request scheme: {request.url.scheme}")
+    print(f"Request host: {request.client.host}")
+    
+    # Debug: Check if the request has any cookies
+    if request.cookies:
+        print(f"Incoming cookies: {request.cookies}")
+    else:
+        print("No incoming cookies in the request.")
    
+    
     # Set the session ID in a cookie
     response.set_cookie(
         key="session_id",
@@ -61,7 +74,9 @@ async def start_session(response: Response, request: Request):
         secure=True,  # Secure only for HTTPS
         samesite='None'
     )
-
+    
+    # Debug: Confirm that the cookie has been set
+    print(f"Set-Cookie header: session_id={session_token}, httponly=True, secure=True, samesite=None")
     # Optionally save session_token
     return {"message": "Session started", "session_id": session_token}
 
