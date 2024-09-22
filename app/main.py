@@ -10,24 +10,12 @@ from app.utils import (
     save_to_db,
 )
 from dotenv import load_dotenv
-import os
-import openai
-from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
-from starlette.middleware.cors import CORSMiddleware
-from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
-from .endpoints import router  # Assuming your router is in 'endpoints'
-
-# Load environment variables from the .env file located in the /app directory
-#load_dotenv(dotenv_path="/app/.env")
 
 # Access the API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize FastAPI app
 app = FastAPI()
-
-# Force redirect to HTTPS
-app.add_middleware(HTTPSRedirectMiddleware)
 
 # Add CORS middleware
 app.add_middleware(
