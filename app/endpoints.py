@@ -77,7 +77,9 @@ async def start_session(response: Response, request: Request):
         value=session_token,
         httponly=True,
         secure=True,  # Secure only for HTTPS
-        samesite='None'
+        samesite='None',
+        domain="dbapi.hrfinnovation.org",
+        path="/"  # Path for the cookie
     )
 
     # Debug: Confirm that the cookie has been set
