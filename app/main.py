@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 from app.endpoints import router  # Ensure this import points to your endpoints file
+import os
+import openai
 from app.utils import (
     insert_into_database,
     select_from_database,
