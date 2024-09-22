@@ -12,7 +12,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 import openai
 openai.api_key = openai_api_key
 
-MYSQL_DATABASE = 'debatebot_dev'
+MYSQL_DATABASE = 'debatebot_prod'
 
 class Settings(BaseSettings):
     # Application settings
