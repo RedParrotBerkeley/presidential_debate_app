@@ -44,10 +44,7 @@ router = APIRouter()
 async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
     session_token = secrets.token_hex(16)
-
-    # Determine if request is HTTPS or HTTP
-    is_secure = request.url.scheme == "https"
-    
+  
     # Setting domain for production usage
     domain = "hrfinnovation.org"  # Use common domain to allow cross-subdomain cookies
 
@@ -56,7 +53,7 @@ async def start_session(response: Response, request: Request):
         key="session_id",
         value=session_token,
         httponly=True,          # Prevent JavaScript from accessing the cookie
-        secure=is_secure,       # Secure only for HTTPS
+        secure=True,       # Secure only for HTTPS
         samesite='None',        # Required for cross-site requests
         domain=domain,          # Ensure it's accessible across subdomains
         path="/"                # Make it valid for all paths
