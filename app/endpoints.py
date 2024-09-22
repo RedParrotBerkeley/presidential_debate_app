@@ -11,6 +11,15 @@ from app.utils import (
     get_openai_embedding,
     find_best_texts,
     save_to_db,
+    categorize_question,
+    get_participant_parties,
+    get_participant_genders,
+    get_participant_ages,
+    get_top_categories,
+    get_winner_percents,
+    categorize_all_questions,
+    get_scoring_metrics,
+    get_sqlachemy_connection
 )
 from datetime import datetime
 
@@ -38,30 +47,25 @@ class SaveRequest(BaseModel):
     faithfulness: float
 
 # Start session endpoint
-router = APIRouter()
-
 @router.get("/start-session/")
 async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
     session_token = secrets.token_hex(16)
-  
-    # Setting domain for production usage
-    domain = "hrfinnovation.org"  # Use common domain to allow cross-subdomain cookies
-
+    
+   
     # Set the session ID in a cookie
     response.set_cookie(
         key="session_id",
         value=session_token,
-        httponly=True,          # Prevent JavaScript from accessing the cookie
-        secure=True,       # Secure only for HTTPS
-        samesite='None',        # Required for cross-site requests
-        domain=domain,          # Ensure it's accessible across subdomains
-        path="/"                # Make it valid for all paths
+        httponly=True,
+        secure=True,  # Secure only for HTTPS
+        samesite='None'
     )
 
+    # Optionally save session_token
     return {"message": "Session started", "session_id": session_token}
 
-
+# Endpoint to receive user query, generate a response, and save to database
 # Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
 async def generate_response_endpoint(request: Request, req_body: QueryRequest):
@@ -152,7 +156,7 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
             "response": best_response_reichert,
             "retrieved_text": best_retrieved_texts_reichert,
             "filenames": [txt for txt in best_texts_df_reichert["filenames"].tolist()],
-            "user_voted": 0,  # Placeholder value for user voted
+            "user_voted": 0,  # Assuming a placeholder value for user voted
             "contexts": best_retrieved_texts_reichert,
             "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
             "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
@@ -164,7 +168,7 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
             "response": best_response_ferguson,
             "retrieved_text": best_retrieved_texts_ferguson,
             "filenames": [txt for txt in best_texts_df_ferguson["filenames"].tolist()],
-            "user_voted": 0,  # Placeholder value for user voted
+            "user_voted": 0,  # Assuming a placeholder value for user voted
             "contexts": best_retrieved_texts_ferguson,
             "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
             "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
@@ -174,9 +178,28 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         return response_data_dict
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        print(traceback.format_exc())  # This will print the full traceback for better debugging
+        # Improved exception handling
+        print(f"An error occurred: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred while processing your request. {str(e)}"
+            detail="An error occurred while processing your request. Please try again later."
         )
+
+@router.get("/stats")
+async def stats_handler():
+    candidate_wins = get_winner_percents()
+    # participant demographics placeholder
+    participant_party = get_participant_parties()
+    # by age range
+    participant_age = get_participant_ages()
+    # by gender
+    participant_gender = get_participant_genders()
+    # top categories asked about
+    top_categories = get_top_categories(10)
+    response = json.dumps({"candidate_wins": candidate_wins, 
+        "participant_party": participant_party,
+        "participant_age":participant_age,
+        "participant_gender":participant_gender,
+        "top_categories": top_categories
+    })
+    return response
