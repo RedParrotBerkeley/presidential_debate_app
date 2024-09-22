@@ -38,29 +38,32 @@ class SaveRequest(BaseModel):
     faithfulness: float
 
 # Start session endpoint
+router = APIRouter()
 
 @router.get("/start-session/")
 async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
     session_token = secrets.token_hex(16)
+
+    # Determine if request is HTTPS or HTTP
+    is_secure = request.url.scheme == "https"
     
-    # # Set the session ID in a cookie
-    # response.set_cookie(key="session_id", value=session_token, httponly=True, secure=True, samesite='None')
-    
-     # Set 'secure' flag based on the request environment (True for HTTPS, False for localhost)
-    #is_secure = "https" in request.url.scheme  # Check if the request is HTTPS
-    #print(f"Is secure: {is_secure}: {request.url}")
-    
+    # Setting domain for production usage
+    domain = "hrfinnovation.org"  # Use common domain to allow cross-subdomain cookies
+
     # Set the session ID in a cookie
     response.set_cookie(
         key="session_id",
         value=session_token,
-        httponly=True,
-        secure=True,  # Secure only for HTTPS
-        samesite='None'
+        httponly=True,          # Prevent JavaScript from accessing the cookie
+        secure=is_secure,       # Secure only for HTTPS
+        samesite='None',        # Required for cross-site requests
+        domain=domain,          # Ensure it's accessible across subdomains
+        path="/"                # Make it valid for all paths
     )
 
     return {"message": "Session started", "session_id": session_token}
+
 
 # Endpoint to receive user query, generate a response, and save to database
 @router.post("/generate-response/", response_model=ResponseModel)
