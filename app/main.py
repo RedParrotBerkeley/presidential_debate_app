@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # Import CORS middleware
 from app.endpoints import router  # Ensure this import points to your endpoints file
+import os
+import openai
 from app.utils import (
     insert_into_database,
     select_from_database,
@@ -10,11 +12,6 @@ from app.utils import (
     save_to_db,
 )
 from dotenv import load_dotenv
-import os
-import openai
-
-# Load environment variables from the .env file located in the /app directory
-#load_dotenv(dotenv_path="/app/.env")
 
 # Access the API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -26,10 +23,10 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://dbapi-stag.hrfinnovation.org",  #staging
-        "https://debatebot-client.vercel.app",  # FE
-        "https://starfish-app-nm2zl.ondigitalocean.app",  # BE
-        "http://localhost"
+        "https://dbapi.hrfinnovation.org",  # Main Branch FE
+        "https://dbapi-stag.hrfinnovation.org",  # Dev branch FE
+        "https://debatebot-client.vercel.app",
+        "https://debatebot-client.vercel.app/"
     ],
     allow_credentials=True,
     allow_methods=["*"],
