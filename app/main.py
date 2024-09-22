@@ -12,6 +12,10 @@ from app.utils import (
 from dotenv import load_dotenv
 import os
 import openai
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from .endpoints import router  # Assuming your router is in 'endpoints'
 
 # Load environment variables from the .env file located in the /app directory
 #load_dotenv(dotenv_path="/app/.env")
@@ -22,12 +26,15 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # Initialize FastAPI app
 app = FastAPI()
 
+# Force redirect to HTTPS
+app.add_middleware(HTTPSRedirectMiddleware)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://dbapi.hrfinnovation.org",  # Main Branch FE
-        "https://dbapi-stag.hrfinnovation.org",  # dev branch FE
+        "https://dbapi-stag.hrfinnovation.org",  # Dev branch FE
         "https://debatebot-client.vercel.app",
         "https://debatebot-client.vercel.app/"
     ],
