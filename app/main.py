@@ -26,7 +26,10 @@ app.add_middleware(
         "https://dbapi.hrfinnovation.org",  # Main Branch FE
         "https://dbapi-stag.hrfinnovation.org",  # Dev branch FE
         "https://debatebot-client.vercel.app",
-        "https://debatebot-client.vercel.app/"
+        "https://debatebot-client.vercel.app/",
+        "https://debatebot-client-git-develop-hrf-innovation-lab.vercel.app/",
+        "https://debatebot-client-git-develop-hrf-innovation-lab.vercel.app"
+        
     ],
     allow_credentials=True,
     allow_methods=["*"],
