@@ -52,8 +52,13 @@ async def start_session(response: Response, request: Request):
     # Generate a session ID (or token)
     session_token = secrets.token_hex(16)
 
+    print("Reqest", request)
+
     # Debug: Print generated session token
     print(f"Generated session token: {session_token}")
+
+    # Debug: Print full request URL
+    print(f"Request URL: {request.url}")
     
     # Debug: Print request scheme and host to ensure HTTPS is used
     print(f"Request scheme: {request.url.scheme}")
@@ -74,7 +79,7 @@ async def start_session(response: Response, request: Request):
         secure=True,  # Secure only for HTTPS
         samesite='None'
     )
-    
+
     # Debug: Confirm that the cookie has been set
     print(f"Set-Cookie header: session_id={session_token}, httponly=True, secure=True, samesite=None")
     # Optionally save session_token
