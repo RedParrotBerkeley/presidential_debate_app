@@ -6,4 +6,6 @@
 # Allow specific files and directories
 !app/
 !requirements.txt
+!nginx/
 !README.md
+!docker-compose.yml
