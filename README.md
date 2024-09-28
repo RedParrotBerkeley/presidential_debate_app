@@ -396,7 +396,7 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > - includes wins, party affiliations, gender, age, and top categories
 
 ---
-> ### 27/09/2004
+> ### 09/27/2004
 > 
 > **Added Files:**
 > 
