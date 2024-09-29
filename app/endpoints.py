@@ -12,6 +12,7 @@ from app.utils import (
     insert_into_database,
     select_from_database,
     generate_response,
+    categorize_question,
     get_openai_embedding,
     find_best_texts,
     save_to_db,
@@ -167,9 +168,12 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest, t
         
         logger.info(f"Authenticated user: {token_payload.get('sub')}")  
         
+        # Categorize question
+        category = categorize_question(query)
+
         # Insert user query into the database
-        vals = (session_id, query, datetime.now())
-        insert_into_database("INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
+        vals = (session_id, query, datetime.now(), category)
+        insert_into_database("INSERT INTO Query (sessionId, query, timestamp, category) VALUES (%s, %s, %s, %s)", vals)
 
         # Retrieve the last query from the database
         query_id, query = select_from_database("SELECT id, query FROM Query ORDER BY id DESC LIMIT 1")[0]
