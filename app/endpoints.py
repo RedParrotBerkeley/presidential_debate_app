@@ -1,9 +1,13 @@
-from fastapi import APIRouter, HTTPException, status, Request, Response
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+import requests
+import logging
 import traceback
-from typing import List, Dict
-import secrets
+from typing import Optional, Dict, List
+import httpx
+from fastapi import APIRouter, HTTPException, Request, Depends
+from jose import jwt, JWTError
+from pydantic import BaseModel
+import os
+from datetime import datetime
 from app.utils import (
     insert_into_database,
     select_from_database,
@@ -11,17 +15,17 @@ from app.utils import (
     get_openai_embedding,
     find_best_texts,
     save_to_db,
-    categorize_question,
     get_participant_parties,
     get_participant_genders,
     get_participant_ages,
     get_top_categories,
     get_winner_percents,
-    categorize_all_questions,
-    get_scoring_metrics,
-    get_sqlachemy_connection
+    validate_token
 )
-from datetime import datetime
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Initialize FastAPI router
 router = APIRouter()
@@ -31,8 +35,13 @@ class QueryRequest(BaseModel):
     query: str
     session_id: str
 
+class StartSessionResponseModel(BaseModel):
+    message: Optional[str]
+    session_id: str
+
 class ResponseModel(BaseModel):
     query_id: int
+    session_id: Optional[str]  # Make this optional if it's not always present
     responses: Dict[str, Dict[str, str]]
 
 class SaveRequest(BaseModel):
@@ -46,50 +55,120 @@ class SaveRequest(BaseModel):
     answer_relevancy: float
     faithfulness: float
 
-# Start session endpoint
-@router.get("/start-session/")
-async def start_session(response: Response, request: Request):
-    # Generate a session ID (or token)
-    session_token = secrets.token_hex(16)
-    
-   
-    # Set the session ID in a cookie
-    response.set_cookie(
-        key="session_id",
-        value=session_token,
-        httponly=True,
-        secure=True,  # Secure only for HTTPS
-        samesite='None'
-    )
+# Load Auth0 settings from environment
+AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN", "hrf-alt-dev.us.auth0.com")
+AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE", "https://dbapi-stag.hrfinnovation.org/api/v2/")
+ALGORITHMS = ["RS256"]
 
-    # Optionally save session_token
-    return {"message": "Session started", "session_id": session_token}
+if not AUTH0_DOMAIN or not AUTH0_AUDIENCE:
+    raise ValueError("Missing Auth0 environment variables. Ensure they are set properly.")
 
-# Endpoint to receive user query, generate a response, and save to database
-# Endpoint to receive user query, generate a response, and save to database
-@router.post("/generate-response/", response_model=ResponseModel)
-async def generate_response_endpoint(request: Request, req_body: QueryRequest):
+# Fetch Auth0 JWKS for verifying RS256 tokens
+jwks_cache = None
+
+def get_jwks():
+    global jwks_cache
+    if jwks_cache is None:
+        url = f'https://{AUTH0_DOMAIN}/.well-known/jwks.json'
+        response = requests.get(url)
+        if response.status_code == 200:
+            jwks_cache = response.json()
+        else:
+            raise HTTPException(status_code=500, detail="Failed to fetch JWKS")
+    return jwks_cache
+
+# Extract the signing key from JWKS
+def get_signing_key(token: str):
     try:
-        # Extract session_id from cookies
-        print("Request cookies:", request.cookies)
-        print("Request base URL", request.base_url)
-        print("Request headers:", request.headers)
-        print("Request url:", request.url)
-        # commented out for now
-        # session_id = request.cookies.get("session_id")
+        unverified_header = jwt.get_unverified_header(token)
+        jwks = get_jwks()
+
+        # Search for the correct key in the JWKS based on 'kid'
+        for key in jwks["keys"]:
+            if key["kid"] == unverified_header["kid"]:
+                rsa_key = {
+                    "kty": key["kty"],
+                    "kid": key["kid"],
+                    "use": key["use"],
+                    "n": key["n"],
+                    "e": key["e"]
+                }
+                return rsa_key
+        raise HTTPException(status_code=403, detail="Unable to find appropriate key")
+    except JWTError as e:
+        raise HTTPException(status_code=403, detail=f"Invalid token: {str(e)}")
+    except KeyError:
+        raise HTTPException(status_code=403, detail="Missing 'kid' in JWT header")
+
+# JWT token verification helper for RS256
+def verify_rs256_token(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        logger.error("Authorization header missing")
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+    
+    logger.info(f"Authorization header received: {auth_header}")
+    
+    try:
+        token = auth_header.split("Bearer ")[1]
+    except IndexError:
+        raise HTTPException(status_code=401, detail="Invalid Authorization header format. Expected: Bearer <token>")
+
+    rsa_key = get_signing_key(token)
+    try:
+        payload = jwt.decode(
+            token,
+            rsa_key,
+            algorithms=ALGORITHMS,
+            audience=AUTH0_AUDIENCE,
+            issuer=f"https://{AUTH0_DOMAIN}/"
+        )
+        return payload
+    except JWTError as e:
+        raise HTTPException(status_code=403, detail=f"Invalid token: {str(e)}")
+
+# Start session endpoint
+@router.get("/start-session/", response_model=StartSessionResponseModel)
+async def start_session(request: Request, token_payload: dict = Depends(verify_rs256_token)):
+    logger.info("Start session endpoint invoked")
+    try:
+        # Retrieve the 'sub' claim from the token, which represents the authenticated user
+        session_token = token_payload.get('sub')
+
+        # Check if the token contains a session identifier (sub claim)
+        if not session_token:
+            raise HTTPException(status_code=400, detail="Session ID is missing in the token")
+
+        # Log the received session token (client ID)
+        logger.info(f"Session started for user ID (sub): {session_token}")
+
+        # Respond with a success message and the session ID
+        return {"message": "Session started successfully", "session_id": session_token}
+
+    except JWTError as e:
+        logger.error(f"JWT validation error: {str(e)}")
+        raise HTTPException(status_code=403, detail="Invalid token or session")
+
+    except Exception as e:
+        logger.error(f"Failed to start session: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while starting the session")
+
+
+# Generate response endpoint
+@router.post("/generate-response/", response_model=ResponseModel)
+async def generate_response_endpoint(request: Request, req_body: QueryRequest, token_payload: dict = Depends(verify_rs256_token)):
+    try:
         session_id = req_body.session_id
         if not session_id:
-            print("No session ID found in cookies")
             raise HTTPException(status_code=400, detail="Session ID is missing")
-        print(f"Session ID received: {session_id}")
-
-        # Extract query from the request body
         query = req_body.query
         if not query:
             raise HTTPException(status_code=400, detail="Query is missing")
         
+        logger.info(f"Authenticated user: {token_payload.get('sub')}")  
+        
         # Insert user query into the database
-        vals = (session_id, query, datetime.now())  # Use session_id
+        vals = (session_id, query, datetime.now())
         insert_into_database("INSERT INTO Query (sessionId, query, timestamp) VALUES (%s, %s, %s)", vals)
 
         # Retrieve the last query from the database
@@ -103,9 +182,9 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         # Retrieve texts for Reichert
         best_texts_df_reichert = find_best_texts(
             query_embedding,
-            ['app/data/embeddings/vectorized_chunks_reichert.pkl'],  # List of .pkl filenames
-            'sources/reichert',  # Folder path for .txt files
-            4  # Number of best texts to retrieve
+            ['app/data/embeddings/vectorized_chunks_reichert.pkl'],
+            'sources/reichert',
+            4
         )
         best_retrieved_texts_reichert = best_texts_df_reichert["texts"].tolist()
         source_url_reichert = best_texts_df_reichert["urls"].tolist()[0] if not best_texts_df_reichert.empty else "No URL found"
@@ -116,9 +195,9 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         # Retrieve texts for Ferguson
         best_texts_df_ferguson = find_best_texts(
             query_embedding,
-            ['app/data/embeddings/vectorized_chunks_ferguson.pkl'],  # List of .pkl filenames
-            'sources/ferguson',  # Folder path for .txt files
-            4  # Number of best texts to retrieve
+            ['app/data/embeddings/vectorized_chunks_ferguson.pkl'],
+            'sources/ferguson',
+            4
         )
         best_retrieved_texts_ferguson = best_texts_df_ferguson["texts"].tolist()
         source_url_ferguson = best_texts_df_ferguson["urls"].tolist()[0] if not best_texts_df_ferguson.empty else "No URL found"
@@ -137,6 +216,7 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
         # Prepare the dictionary response
         response_data_dict = {
             "query_id": query_id,
+            "session_id": session_id,
             "responses": {
                 "reichert": {
                     "response": best_response_reichert,
@@ -149,57 +229,48 @@ async def generate_response_endpoint(request: Request, req_body: QueryRequest):
             }
         }
 
-        # Save response to the database
+        # Save responses to the database
         save_to_db({
             "query_id": query_id,
-            "candidate_id": 1,  # Assuming "1" represents Reichert
+            "candidate_id": 1,
             "response": best_response_reichert,
             "retrieved_text": best_retrieved_texts_reichert,
             "filenames": [txt for txt in best_texts_df_reichert["filenames"].tolist()],
-            "user_voted": 0,  # Assuming a placeholder value for user voted
+            "user_voted": 0,
             "contexts": best_retrieved_texts_reichert,
-            "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
-            "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
+            "answer_relevancy": 0.0,
+            "faithfulness": 0.0
         })
 
         save_to_db({
             "query_id": query_id,
-            "candidate_id": 2,  # Assuming "2" represents Ferguson
+            "candidate_id": 2,
             "response": best_response_ferguson,
             "retrieved_text": best_retrieved_texts_ferguson,
             "filenames": [txt for txt in best_texts_df_ferguson["filenames"].tolist()],
-            "user_voted": 0,  # Assuming a placeholder value for user voted
+            "user_voted": 0,
             "contexts": best_retrieved_texts_ferguson,
-            "answer_relevancy": 0.0,  # Placeholder value; replace with actual computation if needed
-            "faithfulness": 0.0  # Placeholder value; replace with actual computation if needed
+            "answer_relevancy": 0.0,
+            "faithfulness": 0.0
         })
 
-        # Return the dictionary as the response
         return response_data_dict
 
     except Exception as e:
-        # Improved exception handling
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing your request. Please try again later."
+            status_code=500,
+            detail="An error occurred while processing your request."
         )
 
+# Stats endpoint
 @router.get("/stats")
 async def stats_handler():
-    candidate_wins = get_winner_percents()
-    # participant demographics placeholder
-    participant_party = get_participant_parties()
-    # by age range
-    participant_age = get_participant_ages()
-    # by gender
-    participant_gender = get_participant_genders()
-    # top categories asked about
-    top_categories = get_top_categories(10)
-    response = json.dumps({"candidate_wins": candidate_wins, 
-        "participant_party": participant_party,
-        "participant_age":participant_age,
-        "participant_gender":participant_gender,
-        "top_categories": top_categories
-    })
-    return response
+    return {
+        "candidate_wins": get_winner_percents(),
+        "participant_party": get_participant_parties(),
+        "participant_age": get_participant_ages(),
+        "participant_gender": get_participant_genders(),
+        "top_categories": get_top_categories(10)
+    }
