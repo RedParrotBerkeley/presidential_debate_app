@@ -1,7 +1,7 @@
 # 🎙️ Political Debate Simulator
 ## 🏆 Winner of the 2024 Code the Vote Hackathon
 
-The **Presidential Debate Simulator** is an interactive web application designed to simulate a debate between two presidential candidates. Users can ask questions, read the candidates' responses, vote on the best answers, and test their knowledge with trivia questions about US Presidents.
+The **Debate Bot** is an interactive web application designed to simulate a debate between two political candidates. Users can ask questions, read the candidates' responses, and vote on the best answers.
 
 ---
 
@@ -10,29 +10,30 @@ The **Presidential Debate Simulator** is an interactive web application designed
 - **Interactive Debate**: Ask questions and receive responses from Candidate A and Candidate B.
 - **Voting System**: Vote for the best response and see the overall results.
 ~~- -**Trivia Section**: Test your knowledge with trivia questions about US Presidents.~~
-- **Earn Badges**: Earn badges for participation and correct answers in the trivia section.
+~~- **Earn Badges**: Earn badges for participation and correct answers in the trivia section.~~
 
 ---
 
 ## How to Use
 
-1. **Ask a Question**: Enter your question in the input box and click "Ask".
-2. **Read Responses**: Review the responses from Candidate A and Candidate B.
-3. **Vote**: Vote for the response you like best by clicking the "Vote" button under the candidate's response.
-4. **End Debate**: Click "End Debate" to see the results.
+1. **Visit WebApp**: Read a bit about each candidate and choose your moderator.
+2. **Ask a Question or select a popular question**: Enter your question in the input box and click "Ask".
+3. **Read Responses**: Review the responses from Candidate A and Candidate B.
+4. **Vote**: Vote for the response you like best by clicking the "Vote" button under the candidate's response.
+5. **See Winner**: See who you chose for each question asked.
+6. **End Debate**: Click "End Debate" to see the overall results and the source for each answer.
 
-## Getting Started
+~~## Getting Started~~
 
-To run this project locally:
+~~To run this project locally:~~
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/yourusername/presidential-debate-simulator.git
-2. Navigate to directory:
-   cd presidential-debate-simulator
-3. Create an API via openai.com and paste the apiKey into line 39 and 321 and click save. 
+~~1. Clone the repository:~~
+
+~~2. Navigate to directory:~~
+   ~~cd presidential-debate-simulator~~
+~~3. Create an API via openai.com and paste the apiKey into line 39 and 321 and click save.~~ 
    
-4. Open index.html in your web browser. (Best using Chrome)
+~~4. Open index.html in your web browser. (Best using Chrome)~~
 
 ## Data Analysis and Visualizations
 * View data visualizations created from mock_response_data.csv by running voting_viz.ipynb 
@@ -352,6 +353,35 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > #### Add candidate win counts:
 > - Added the `leaderboard_stats.py` file to hold functions related to getting stats for the leaderboard page
 > - Added `get_winner_counts()` to get count of each candidate's wins
+
+> - added a handler `stats_handler()` in `main.py` to provide the api the json structure with placeholder values
+>
+
+> ## 09/18/2024
+>
+> #### Add Response Flag and Session IDs:
+> - Added Import Secrets
+> - Added Flag Response if both candidates cannot provide an answer
+> - Added  `router.get("/start-session/")`
+>
+>   JSON Payload
+>   response body 
+>   `{
+>      "messages": "Session Started"
+>      "session_id": "generated_session_token_here"
+>   }`
+>
+>   response header
+>   `Set-Cookie: session_id=generated_session_token_here; Path=/; HttpOnly`
+>      
+---
+> ## 09/19/2024
+>
+> #### Update Pickle and Source Files
+> - Updated app/data/embeddings/Ferguson.pkl
+> - Updated app/data/embeddings/Reichert.pkl
+> - Added into app/sources/ferguson - Ferguson_Second_Debate_Sept_18_2024.txt
+> - Added into app/sources/reichert - Reichert_Second_Debate_Sept_18_2024.txt
 > - added a handler `stats_handler()` in `main.py` to provide the api the json structure with placeholder values  
 
 ---
@@ -365,9 +395,46 @@ Stay informed about the latest changes and improvements to the project. Below yo
 > - added an endpoint `/stats` to provide the api the json with all the leaderboard stats
 > - includes wins, party affiliations, gender, age, and top categories
 
+---
+> ### 09/27/2004
+> 
+> **Added Files:**
+> 
+> - `endpoints.py`:  
+>   - Detailed logger added.
+>   - Implemented `BaseModel`.
+>   - Added Auth0 and RS256 validation.
+>   - Secured Endpoints: `Start-Session` and `Generate-Response`.
+>   - **#TODO**: Implement `Stats` handler.
+> 
+> - `main.py`:
+>   - Added CORS settings.
+>   - Added Auth0 `get_secure_data` function.
+> 
+> - `utils.py`:
+>   - Added `validate_token` function.
+> 
+> - `config.py`:
+>   - Added `Settings` class.
+>   - `BaseSettings` now includes Auth0 settings.
+> 
+> - `requirements.txt`:
+>   - `black==24.8.0`
+>   - `authlib==1.3.2`
+>   - `python-jose==3.3.0`
+> 
+> **Purpose:**
+> 
+> Provides updates to enhance security (endpoint), configuration, and logging in the application.
+> 
+> **Key Features:**
+> 
+> - Detailed logging and authentication validation in `endpoints.py`.
+> - CORS and Auth0 functionality improvements in `main.py`.
+> - Utility for token validation in `utils.py`.
+> - Centralized settings management in `config.py`.
+> - Updated dependencies in `requirements.txt`.
 
-
->>>>>>> develop 
 
 
 
@@ -381,35 +448,6 @@ This project is licensed under the **Testing Purposes License**. For more detail
 
 Here are the key documents and speeches used as text data sources for our project. Each link provides access to publicly available content for analysis.
 
-### 🗣️ Speeches and Public Statements
+### 🗣️ Speeches and Public Statements can all be found in the app/sources directory
 
-> **Donald Trump**  
-> [📄 View Document](https://docs.google.com/document/d/12vgqTrVF0JSSBvXW6xwxdUVT9w36WXVVYiTvjRKfRzw/edit)  
-> *A collection of speeches and public statements made by Donald Trump.*
-
-> **Kamala Harris**  
-> [📄 View Document](https://docs.google.com/document/d/1-m0UCzJ7CY_NwdJid91wIa0JwDxwfkBYnpSS6FDiHAg/edit)  
-> *Key speeches and public addresses by Vice President Kamala Harris.*
-
-### 🏛️ Political Figures
-
-> **Governors' Statements**  
-> [📄 View Document](https://docs.google.com/document/d/16OO5ZqDZtAyE6GW79tesC7MaJ5z5jiVP2HwZ7Fu4VyI/edit)  
-> *Statements and announcements from various U.S. governors.*
-
-> **Steve Garvey**  
-> [📄 View Document](https://docs.google.com/document/d/16RuK5aP-nP5hRO_TT7V9IV14zJStBbt_6cqh84_C--I/edit)  
-> *Public statements and interviews with Steve Garvey.*
-
-> **Adam Schiff**  
-> [📄 View Document](https://docs.google.com/document/d/16TBYK2v3isS1D8b_RjTntDKzZKMZ8d2TmDlX_oFQs7M/edit)  
-> *Speeches and public comments from Representative Adam Schiff.*
-
-> **Ted Cruz**  
-> [📄 View Document](https://docs.google.com/document/d/16gHSkshQ2EwIAF-XKYd5AlSoN5Sor-5aOQucSlW2Msw/edit)  
-> *Public addresses and policy statements from Senator Ted Cruz.*
-
-> **Colin Allred**  
-> [📄 View Document](https://docs.google.com/document/d/16cnauFJRgS2Wpp5RnTaieCUAr3aki063SZFX0cAuMVY/edit)  
-> *Key speeches and positions articulated by Representative Colin Allred.*
 

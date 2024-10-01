@@ -15,8 +15,8 @@ openai.api_key = openai_api_key
 MYSQL_DATABASE = 'debatebot_prod'
 
 class Settings(BaseSettings):
-    # Application settings
-    app_name: str = "FastAPI Application"
+    # App settings
+    app_name: str = "Debate Bot"
     debug: bool = True
 
     # Database settings
@@ -24,14 +24,19 @@ class Settings(BaseSettings):
     mysql_password: str = os.getenv("MYSQL_PASSWORD")
     mysql_host: str = os.getenv("MYSQL_HOST")
     mysql_port: int = int(os.getenv("MYSQL_PORT", 3306))
-    #mysql_database: str = os.getenv("MYSQL_DATABASE")
 
-    # OpenAI API settings
+    mysql_database: str = "debatebot_dev"
+
+
+    # OpenAI settings
     openai_api_key: str = os.getenv("OPENAI_API_KEY")
+    openai_model: str = "gpt-4o-mini"
     
-    # Other settings
-    model: str = "gpt-4o-mini"
-    embedding_model: str = "text-embedding-3-small"
+    # Auth0 settings
+    auth0_domain: str = os.getenv("AUTH0_DOMAIN", "https://hrf-alt-dev.us.auth0.com/")
+    auth0_client_id: str = os.getenv("AUTH0_CLIENT_ID")
+    auth0_client_secret: str = os.getenv("AUTH0_CLIENT_SECRET")
+    auth0_audience: str = os.getenv("AUTH0_AUDIENCE", "https://dbapi-stag.hrfinnovation.org/api/v2/")
 
     class Config:
         env_file = ".env"

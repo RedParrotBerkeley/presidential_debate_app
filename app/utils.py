@@ -3,6 +3,7 @@ import pickle
 import re
 import csv
 import json
+from jose import jwt, JWTError
 import numpy as np
 from scipy.spatial.distance import cosine
 import tiktoken  # OpenAI's tokenizer
@@ -39,7 +40,7 @@ else:
 # Initialize OpenAI API key
 #openai.api_key = os.getenv('OPENAI_API_KEY')
 
-MYSQL_DATABASE = 'debatebot_prod'
+MYSQL_DATABASE = 'debatebot_dev'
 
 # Database Configuration
 MYSQL_USER = os.getenv('MYSQL_USER')
@@ -59,6 +60,40 @@ print(f"MySQL Database: {MYSQL_DATABASE}")
 
 # SQLAlchemy engine
 engine = sqlalchemy.create_engine(f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}')
+
+
+async def validate_token(token: str):
+    try:
+        # Extract header from JWT to get the 'kid'
+        unverified_header = jwt.get_unverified_header(token)
+
+        # Fetch the JWKS (JSON Web Key Set) and find the correct key
+        jwks = get_auth0_jwks()
+        rsa_key = {}
+        for key in jwks['keys']:
+            if key['kid'] == unverified_header['kid']:
+                rsa_key = {
+                    'kty': key['kty'],
+                    'kid': key['kid'],
+                    'use': key['use'],
+                    'n': key['n'],
+                    'e': key['e']
+                }
+        if rsa_key:
+            # Validate the JWT using Auth0 public key
+            payload = jwt.decode(
+                token,
+                rsa_key,
+                algorithms=["RS256"],
+                audience=AUTH0_M2M_AUDIENCE,
+                issuer=f"https://{AUTH0_BASE_URL}/"
+            )
+            return payload
+        else:
+            raise HTTPException(status_code=401, detail="Unable to find the appropriate key.")
+    except JWTError as e:
+        raise HTTPException(status_code=403, detail="Could not validate credentials")
+
 
 # Function to create a database connection using MySQL Connector
 def get_database_connection():

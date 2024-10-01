@@ -29,4 +29,3 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-
 
 # run the following after building
 # docker run --env-file .env my-python-app
-
