@@ -21,7 +21,7 @@ AUTH0_CLIENT_SECRET = 'UmO8p22fzh_pciTMQXT-nCEZpZzdXy9_iteR2l9UYvPpNV1qvP1l1N-5j
 # Add trusted hosts
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["dbapi-stag.hrfinnovation.org", "*.dbapi-stag.hrfinnovation.org", "localhost"],
+    allowed_hosts=["dbapi-stag.hrfinnovation.org", "*.dbapi-stag.hrfinnovation.org", "debatebot.hrfinnovation.org", "*.debatebot.hrfinnovation.org""localhost"],
 )  
 
 # Add CORS middleware
